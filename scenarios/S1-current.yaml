@@ -1,0 +1,8 @@
+id: S1
+title: Current conditions
+prompt: "What's the weather in Paris?"
+# Scripted mode replays these tool calls on both sides (no LLM).
+steps:
+  - tool: get_weather
+    args: { city: Paris }
+    expect: ["Paris, Île-de-France Region, France", "Feels like", "Humidity", "Wind", "Local time"]

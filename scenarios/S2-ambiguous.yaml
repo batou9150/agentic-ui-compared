@@ -1,0 +1,10 @@
+id: S2
+title: Ambiguous city
+prompt: "Weather in Springfield"
+steps:
+  - tool: get_weather
+    args: { city: Springfield }
+    expect: ["Which Springfield?", "Missouri", "Massachusetts", "Illinois", "Ohio", "Tennessee"]
+  # A user action: a real click in the rendered UI (Playwright or a human).
+  - click: Illinois
+    expect: ["Springfield, Illinois, United States", "Feels like"]

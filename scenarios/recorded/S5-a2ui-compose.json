@@ -1,0 +1,81 @@
+{
+  "source": "PLACEHOLDER written by hand from the fixtures, to be replaced by a recorded Live run (make record-s5).",
+  "text": "Here is Paris and Tokyo on one chart.",
+  "messages": [
+    {
+      "version": "v0.9.1",
+      "createSurface": {
+        "surfaceId": "compose-1",
+        "catalogId": "https://github.com/batou9150/agentic-ui-compared/a2ui/weather-catalog.json"
+      }
+    },
+    {
+      "version": "v0.9.1",
+      "updateComponents": {
+        "surfaceId": "compose-1",
+        "components": [
+          {
+            "id": "root",
+            "component": "Card",
+            "child": "col"
+          },
+          {
+            "id": "col",
+            "component": "Column",
+            "children": ["title", "sub", "chart", "note"]
+          },
+          {
+            "id": "title",
+            "component": "Text",
+            "text": "Paris vs Tokyo: next 7 days",
+            "variant": "h2"
+          },
+          {
+            "id": "sub",
+            "component": "Text",
+            "text": "Daily max and min temperature (°C)",
+            "variant": "caption"
+          },
+          {
+            "id": "chart",
+            "component": "Chart",
+            "labels": ["Sun 4", "Mon 5", "Tue 6", "Wed 7", "Thu 8", "Fri 9", "Sat 10"],
+            "leftUnit": "°C",
+            "series": [
+              {
+                "label": "Paris max",
+                "kind": "line",
+                "axis": "left",
+                "values": [24.8, 24.0, 24.2, 16.5, 15.9, 18.6, 18.5]
+              },
+              {
+                "label": "Paris min",
+                "kind": "line",
+                "axis": "left",
+                "values": [13.8, 13.7, 12.5, 12.2, 9.2, 9.7, 11.6]
+              },
+              {
+                "label": "Tokyo max",
+                "kind": "line",
+                "axis": "left",
+                "values": [22.8, 27.5, 25.6, 22.8, 23.3, 24.0, 25.8]
+              },
+              {
+                "label": "Tokyo min",
+                "kind": "line",
+                "axis": "left",
+                "values": [16.8, 19.6, 18.1, 14.4, 13.1, 14.2, 16.1]
+              }
+            ]
+          },
+          {
+            "id": "note",
+            "component": "Text",
+            "text": "Weather data by Open-Meteo.com (CC BY 4.0)",
+            "variant": "caption"
+          }
+        ]
+      }
+    }
+  ]
+}

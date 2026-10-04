@@ -1,0 +1,11 @@
+id: S3
+title: Forecast chart with controls
+prompt: "Forecast for Lyon"
+steps:
+  - tool: get_forecast
+    args: { city: Lyon, days: 7 }
+    expect: ["Lyon, Rhône-Alpes, France", "7-day forecast"]
+  - click: 16 days
+    expect: ["16-day forecast"]
+  - click: °F
+    expect: ["16-day forecast", "°F"]

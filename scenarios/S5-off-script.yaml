@@ -1,0 +1,22 @@
+id: S5
+title: Off-script comparison
+prompt: "Compare Paris and Tokyo over the next 7 days on one chart"
+# No view was designed for this. In Scripted mode each side replays what its
+# approach can do: MCP Apps can only call its single-city forecast twice;
+# A2UI fetches the data without UI and replays a layout composed by the LLM
+# (recorded from a Live run, validated against the catalog when replayed).
+steps:
+  mcp:
+    - tool: get_forecast
+      args: { city: Paris, days: 7 }
+      expect: ["Paris"]
+    - tool: get_forecast
+      args: { city: Tokyo, days: 7 }
+      expect: ["Tokyo"]
+  a2ui:
+    - tool: get_forecast
+      args: { city: Paris, days: 7, show_ui: false }
+    - tool: get_forecast
+      args: { city: Tokyo, days: 7, show_ui: false }
+    - compose: recorded/S5-a2ui-compose.json
+      expect: ["Paris", "Tokyo"]

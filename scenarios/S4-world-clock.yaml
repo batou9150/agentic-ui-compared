@@ -1,0 +1,7 @@
+id: S4
+title: Multi-city world clock
+prompt: "Time and weather in Paris, Tokyo and New York"
+steps:
+  - tool: get_world_clock
+    args: { cities: [Paris, Tokyo, New York] }
+    expect: ["Paris", "Tokyo", "New York", "CEST", "JST", "EDT"]
