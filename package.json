@@ -4,7 +4,8 @@
   "license": "MIT",
   "author": "Baptiste PIRAULT",
   "workspaces": [
-    "mcp-apps/views"
+    "mcp-apps/views",
+    "a2ui/client"
   ],
   "engines": {
     "node": ">=24"

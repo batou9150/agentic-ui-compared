@@ -1,6 +1,6 @@
 ENV_FILE := $(if $(wildcard .env),--env-file .env,)
 
-.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views
+.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views a2ui a2ui-agent a2ui-client
 
 install:
 	uv sync
@@ -15,7 +15,7 @@ lint:
 	npm run lint
 
 typecheck:
-	uv run mypy core/src mcp-apps/server/src
+	uv run mypy core/src mcp-apps/server/src a2ui/agent/src
 	npm run typecheck
 
 # Re-record Open-Meteo fixtures (a few dozen live requests, run sparingly).
@@ -30,3 +30,17 @@ mcp-apps-views:
 # MCP server on http://localhost:$${MCP_APPS_PORT:-3001}/mcp (Streamable HTTP).
 mcp-apps: mcp-apps-views
 	uv run $(ENV_FILE) mcp-apps-server
+
+# ---- A2UI ------------------------------------------------------------------
+
+# A2A agent on http://localhost:$${A2UI_AGENT_PORT:-10002} (Live mode needs Gemini credentials).
+a2ui-agent:
+	uv run $(ENV_FILE) a2ui-agent
+
+# Standalone web client on http://localhost:5174 (talks to the agent above).
+a2ui-client:
+	npm run dev -w a2ui/client
+
+# Both, in parallel.
+a2ui:
+	$(MAKE) -j2 a2ui-agent a2ui-client

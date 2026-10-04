@@ -1,0 +1,24 @@
+{
+  "name": "@weather/a2ui-client",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@a2a-js/sdk": "0.3.14",
+    "@a2ui/lit": "0.12.0",
+    "@a2ui/markdown-it": "0.2.0",
+    "@a2ui/web_core": "0.12.0",
+    "chart.js": "4.5.1",
+    "lit": "3.3.3",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "vite": "8.3.2"
+  }
+}
