@@ -1,0 +1,46 @@
+[project]
+name = "agentic-ui-compared"
+version = "0.1.0"
+description = "The same weather app built twice, with MCP Apps and with A2UI, compared."
+license = "MIT"
+authors = [{ name = "Baptiste PIRAULT" }]
+requires-python = ">=3.13,<3.14"
+dependencies = ["weather-core"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["core"]
+
+[tool.uv.sources]
+weather-core = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "pytest-cov==7.1.0",
+    "respx==0.23.1",
+    "ruff==0.16.10",
+    "mypy==2.4.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "RUF", "SIM"]
+ignore = ["E501"]  # the formatter owns line length; long f-strings stay readable
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["live: hits the real Open-Meteo API (opt-in, run with -m live)"]
+addopts = "-m 'not live'"
