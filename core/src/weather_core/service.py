@@ -10,6 +10,7 @@ When a name is ambiguous, operations return a `Resolution` with candidates
 instead of guessing; the UI shows a picker and calls again with `place_id`.
 """
 
+import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
@@ -34,6 +35,7 @@ from .models import (
 from .wmo import condition
 
 MAX_CANDIDATES = 5
+MAX_CITIES = 8
 # A name is ambiguous when the runner-up has at least this share of the top
 # match's population: Springfield MO/MA/IL are ambiguous, Paris FR/TX is not.
 AMBIGUITY_RATIO = 0.1
@@ -150,6 +152,26 @@ class WeatherService:
             current=current,
             local_time=local,
             summary=summary.current(place, current, local, labels),
+        )
+
+    async def many_city_weather(
+        self,
+        cities: list[str] | None = None,
+        place_ids: list[int] | None = None,
+        units: Units = Units.METRIC,
+    ) -> list[CityWeather | Resolution]:
+        """World clock (S4): one entry per requested city, in request order.
+
+        Ambiguous names come back as a Resolution so the UI can ask which one.
+        """
+        queries: list[tuple[str | None, int | None]] = [(c, None) for c in cities or []]
+        queries += [(None, i) for i in place_ids or []]
+        if not queries:
+            raise InvalidRequestError("Give at least one city.")
+        if len(queries) > MAX_CITIES:
+            raise InvalidRequestError(f"At most {MAX_CITIES} cities at once.")
+        return list(
+            await asyncio.gather(*(self.city_weather(c, i, units) for c, i in queries))
         )
 
     async def forecast(

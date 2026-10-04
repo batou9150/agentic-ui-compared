@@ -112,3 +112,29 @@ async def test_models_serialise_to_json(service: WeatherService) -> None:
     data = w.model_dump(mode="json")
     assert data["current"]["condition"]["icon"]
     assert data["local_time"]["iso"].endswith("+02:00")
+
+
+async def test_many_city_weather_keeps_order(service: WeatherService) -> None:
+    items = await service.many_city_weather(
+        ["Paris", "Tokyo", "New York", "Springfield"]
+    )
+    assert [type(i).__name__ for i in items] == [
+        "CityWeather",
+        "CityWeather",
+        "CityWeather",
+        "Resolution",
+    ]
+    assert [i.place.name for i in items if isinstance(i, CityWeather)] == [
+        "Paris",
+        "Tokyo",
+        "New York",
+    ]
+    by_id = await service.many_city_weather(place_ids=[4250542])
+    assert isinstance(by_id[0], CityWeather) and by_id[0].place.region == "Illinois"
+
+
+async def test_many_city_weather_limits(service: WeatherService) -> None:
+    with pytest.raises(InvalidRequestError):
+        await service.many_city_weather([])
+    with pytest.raises(InvalidRequestError):
+        await service.many_city_weather(["Paris"] * 9)
