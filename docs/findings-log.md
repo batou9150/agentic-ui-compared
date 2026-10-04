@@ -66,3 +66,25 @@
   `__init__.py` per project folder.
 - Client bundle (standalone page, Lit renderer + basic catalog + Chart.js +
   A2A client): 673 KB raw / 181 KB gzip, loaded once for all surfaces.
+
+## Comparison harness (2026-10-04)
+
+- First Scripted numbers (local, single run, indicative only): S1 MCP Apps
+  236.6 KB / 2 round trips / ~100-130 ms to first render (iframe + sandbox
+  proxy + 235 KB HTML parse); A2UI 3.3 KB / 1 round trip / ~20-45 ms.
+- The MCP Apps view lifecycle is visible in the log: resources/read and
+  tools/call in parallel, then sandbox-resource-ready (the 235 KB HTML goes
+  over postMessage), ui/initialize, tool-input, tool-result, size-changed.
+- S2/S3 clicks: MCP view -> host -> tools/call -> result -> view +
+  ui/update-model-context (2 bridge requests + 1 network round trip);
+  A2UI action -> message/stream -> updateComponents/updateDataModel
+  (1 round trip, renderer applies it).
+- Theming: the MCP host pushes its palette into views via host CSS variables
+  (the views look like the host); on the A2UI side the client's CSS variables
+  style the renderer's components (the surfaces look like the client).
+- Time zones are a trap for LLM-composed charts: Open-Meteo `timezone=auto`
+  daily series start on each city's local "today", so a Paris + Tokyo chart
+  sharing one label axis can be off by a day. Check the recorded S5.
+- Harness: Scripted and Live need different backend instances (fixtures +
+  frozen clock vs live API); `make compare` runs both pairs, no protocol
+  change needed. macOS bash 3.2 needs care in the launcher script.
