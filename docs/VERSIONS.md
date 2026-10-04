@@ -43,9 +43,10 @@ dated header of `COMPARISON.md`.
 |---|---|---|
 | @modelcontextprotocol/ext-apps | 2.0.3 | mcp-apps views (App SDK), compare host (`/app-bridge`) |
 | @modelcontextprotocol/client | 2.3.0 | compare host (peer of ext-apps 2.x) |
-| zod | 4.6.5 | peer of ext-apps, A2UI custom component props |
+| zod | 4.6.5 (mcp-apps views) / 3.25.76 (a2ui client) | ext-apps 2.x needs zod 4, `@a2ui/*` 0.12 is built on zod 3 |
 | @a2ui/web_core | 0.12.0 | a2ui client, compare right pane |
 | @a2ui/lit | 0.12.0 | a2ui client, compare right pane |
+| @a2ui/markdown-it | 0.2.0 | Markdown in A2UI `Text` (peer of @a2ui/lit) |
 | @a2a-js/sdk | 0.3.14 | a2ui client (0.3 line, matches a2a-sdk 0.3 on the server) |
 | lit | 3.3.3 | A2UI custom components |
 | chart.js | 4.5.1 | forecast chart (same library on both sides) |
