@@ -1,0 +1,20 @@
+{
+ "id": 4659557,
+ "name": "Springfield",
+ "latitude": 36.50921,
+ "longitude": -86.885,
+ "elevation": 203.0,
+ "feature_code": "PPLA2",
+ "country_code": "US",
+ "admin1_id": 4662168,
+ "admin2_id": 4653638,
+ "timezone": "America/Chicago",
+ "population": 16808,
+ "postcodes": [
+  "37172"
+ ],
+ "country_id": 6252001,
+ "country": "United States",
+ "admin1": "Tennessee",
+ "admin2": "Robertson"
+}
