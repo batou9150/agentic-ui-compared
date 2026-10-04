@@ -15,8 +15,8 @@ Measured on 2026-10-04 (scripted mode, median of 10 runs after one warm-up; Darw
 | A2UI | Agent (tools, prompt, executor, A2A server) | 554 |
 | A2UI | Client app (A2A connection, chat shell) | 285 |
 | **A2UI** | **total** | **1374** |
-| Harness only (not product code) | Minimal MCP Apps host (what a real host provides) | 409 |
-| **Harness only (not product code)** | **total** | **409** |
+| Harness only (not product code) | Minimal MCP Apps host (what a real host provides) | 411 |
+| **Harness only (not product code)** | **total** | **411** |
 
 **Artifacts**
 

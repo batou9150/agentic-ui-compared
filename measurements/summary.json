@@ -67,7 +67,7 @@
     },
     "Harness only (not product code)": {
       "Minimal MCP Apps host (what a real host provides)": {
-        "loc": 409,
+        "loc": 411,
         "files": [
           "compare/server/csp.ts",
           "compare/server/sandbox.html",
@@ -75,7 +75,7 @@
           "compare/src/mcp/host.ts"
         ]
       },
-      "total": 409
+      "total": 411
     }
   },
   "artifacts": {
