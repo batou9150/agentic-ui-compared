@@ -312,3 +312,20 @@ def test_live_gives_up_after_one_retry(make_agent: Any) -> None:
     task = agent.text("Compare Paris and Tokyo on one chart")
     assert a2ui_messages(task) == []
     assert "invalid" in final_text(task)
+
+
+def test_scripted_compose_replays_a_validated_layout(make_agent: Any) -> None:
+    agent, _ = make_agent()
+    recorded = {"text": "Both cities.", "messages": [COMPOSED, COMPONENTS]}
+    task = agent.text("Compare", scripted={"compose": recorded})
+    assert [m.get("createSurface", {}).get("surfaceId") for m in a2ui_messages(task)][
+        0
+    ] == "compare-1"
+    assert final_text(task) == "Both cities."
+
+
+def test_scripted_compose_rejects_invalid_layout(make_agent: Any) -> None:
+    agent, _ = make_agent()
+    task = agent.text("Compare", scripted={"compose": {"messages": [COMPOSED, BROKEN]}})
+    assert a2ui_messages(task) == []
+    assert "recorded layout is invalid" in final_text(task)

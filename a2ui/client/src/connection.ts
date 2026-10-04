@@ -28,6 +28,8 @@ export interface ConnectionHooks {
   onText?: (text: string) => void;
   onProtocol?: (event: ProtocolEvent) => void;
   onTurnEnd?: (result: TurnResult) => void;
+  /** After A2UI messages were applied and the browser painted them. */
+  onRendered?: () => void;
   onError?: (error: Error) => void;
 }
 
@@ -61,6 +63,11 @@ export class A2uiAgentConnection {
       },
     });
     return this.client;
+  }
+
+  /** Fetch the agent card now (connection setup, outside any measured run). */
+  async ready(): Promise<void> {
+    await this.getClient();
   }
 
   /** A user prompt. `metadata.scripted` replays a tool call without the LLM. */
@@ -122,17 +129,26 @@ export class A2uiAgentConnection {
 
   private handleParts(parts: Part[], result: TurnResult): void {
     const a2ui: Record<string, unknown>[] = [];
+    const texts: string[] = [];
     for (const part of parts) {
       if (part.kind === "text" && part.text.trim()) {
-        result.text.push(part.text);
-        this.hooks.onText?.(part.text);
+        texts.push(part.text);
       } else if (part.kind === "data" && part.metadata?.mimeType === A2UI_MIME_TYPE) {
         const message = part.data as Record<string, unknown>;
         this.emit("in", Object.keys(message).find((k) => k !== "version") ?? "a2ui", message);
         a2ui.push(message);
       }
     }
-    if (a2ui.length) this.processor.processMessages(a2ui as never);
+    if (a2ui.length) {
+      this.processor.processMessages(a2ui as never);
+      const rendered = this.hooks.onRendered;
+      if (rendered) requestAnimationFrame(() => requestAnimationFrame(rendered));
+    }
+    // UI first, then the agent's words (same order as a host showing a view).
+    for (const text of texts) {
+      result.text.push(text);
+      this.hooks.onText?.(text);
+    }
   }
 
   private emit(direction: "in" | "out", kind: string, payload: unknown, envelope = false): void {

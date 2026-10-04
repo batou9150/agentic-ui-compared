@@ -169,6 +169,20 @@ class WeatherAgentExecutor(AgentExecutor):
     # ---- scripted steps (no LLM) ---------------------------------------------
 
     async def on_scripted(self, conv: str, step: dict[str, Any]) -> list[Part]:
+        if "compose" in step:  # replay a layout recorded from a Live run
+            recorded = step["compose"]
+            try:
+                weather_catalog().validate(recorded["messages"])
+            except Exception as exc:
+                return [
+                    Part(root=TextPart(text=f"The recorded layout is invalid: {exc}"))
+                ]
+            text = (
+                [Part(root=TextPart(text=recorded["text"]))]
+                if recorded.get("text")
+                else []
+            )
+            return [*_a2ui_parts(recorded["messages"]), *text]
         tool = self.tools.get(step.get("tool", ""))
         if tool is None:
             return [Part(root=TextPart(text=f"Unknown tool {step.get('tool')!r}."))]
@@ -180,7 +194,7 @@ class WeatherAgentExecutor(AgentExecutor):
             UI_SINK.reset(token)
         text = result.get("summary") or result.get("error_message", "")
         msgs = [m for req in sink for m in self.render(conv, req)]
-        return [Part(root=TextPart(text=text)), *_a2ui_parts(msgs)]
+        return [*_a2ui_parts(msgs), Part(root=TextPart(text=text))]
 
     # ---- live (LLM) ----------------------------------------------------------
 

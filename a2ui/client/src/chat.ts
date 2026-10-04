@@ -51,9 +51,16 @@ export class WeatherA2uiChat extends LitElement {
     return this.connection;
   }
 
-  /** Send a prompt as if typed; `metadata.scripted` replays a tool without the LLM. */
-  async ask(text: string, metadata?: Record<string, unknown>): Promise<TurnResult | undefined> {
-    this.items = [...this.items, { kind: "user", text }];
+  /**
+   * Send a prompt as if typed; `metadata.scripted` replays a tool without the
+   * LLM. `silent` hides the user bubble (follow-up steps of a scripted run).
+   */
+  async ask(
+    text: string,
+    metadata?: Record<string, unknown>,
+    silent = false,
+  ): Promise<TurnResult | undefined> {
+    if (!silent) this.items = [...this.items, { kind: "user", text }];
     this.pending = true;
     try {
       return await this.agent.sendText(text, metadata);
@@ -68,6 +75,11 @@ export class WeatherA2uiChat extends LitElement {
     this.connection?.reset();
     this.connection = undefined;
     this.items = [];
+  }
+
+  /** Add a line to the transcript without talking to the agent. */
+  note(text: string): void {
+    this.items = [...this.items, { kind: "user", text }];
   }
 
   private onSubmit(e: SubmitEvent): void {
