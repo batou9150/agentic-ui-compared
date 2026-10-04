@@ -6,7 +6,8 @@
   "workspaces": [
     "mcp-apps/views",
     "a2ui/client",
-    "compare"
+    "compare",
+    "scenarios"
   ],
   "engines": {
     "node": ">=24"
@@ -22,7 +23,8 @@
   "scripts": {
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "build": "npm run build -w mcp-apps/views -w a2ui/client -w compare",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test -w compare"
   }
 }

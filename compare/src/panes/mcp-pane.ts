@@ -49,6 +49,8 @@ export class McpPane extends LitElement implements Pane {
 
   async reset(): Promise<void> {
     await this.host?.close();
+    this.host = undefined;
+    await this.updateComplete;
     this.transcript.replaceChildren();
     this.connected = false;
     await this.connect();

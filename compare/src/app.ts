@@ -62,12 +62,18 @@ export class CompareApp extends LitElement {
     document.documentElement.dataset.theme = this.theme;
     this.config = (await (await fetch("/api/config")).json()) as Config;
     await this.updateComplete;
-    try {
-      await Promise.all(this.panes.map((p) => p.connect()));
-      for (const p of this.panes) p.setTheme(this.theme);
-      this.ready = true;
-    } catch (error) {
-      this.error = `Cannot reach the backends (make compare starts them): ${(error as Error).message}`;
+    // Backends may still be starting (make compare launches everything at once).
+    for (let attempt = 1; !this.ready; attempt++) {
+      try {
+        await Promise.all(this.panes.map((p) => p.reset()));
+        for (const p of this.panes) p.setTheme(this.theme);
+        this.ready = true;
+        this.error = "";
+      } catch (error) {
+        this.error = `Waiting for the backends (make compare starts them): ${(error as Error).message}`;
+        if (attempt >= 30) break;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
     }
     for (const p of this.panes) p.addEventListener("log", () => this.inspector(p)?.refresh());
     const id = params.get("scenario");

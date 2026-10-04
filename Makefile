@@ -1,6 +1,6 @@
 ENV_FILE := $(if $(wildcard .env),--env-file .env,)
 
-.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views a2ui a2ui-agent a2ui-client compare
+.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views a2ui a2ui-agent a2ui-client compare compare-scripted e2e
 
 install:
 	uv sync
@@ -50,3 +50,11 @@ a2ui:
 # Both backends twice (Scripted: fixtures, Live: real API) + UI on :8080.
 compare: mcp-apps-views
 	./scripts/compare.sh
+
+# Scripted backends only (no network, no LLM): what the e2e tests drive.
+compare-scripted: mcp-apps-views
+	COMPARE_SCRIPTED_ONLY=1 ./scripts/compare.sh
+
+# Playwright e2e on both panes, Scripted mode (starts compare-scripted itself).
+e2e:
+	npm run e2e -w scenarios

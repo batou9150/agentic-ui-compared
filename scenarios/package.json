@@ -1,0 +1,15 @@
+{
+  "name": "@weather/scenarios",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.19.1",
+    "yaml": "2.9.1"
+  }
+}

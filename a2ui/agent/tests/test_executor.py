@@ -318,9 +318,8 @@ def test_scripted_compose_replays_a_validated_layout(make_agent: Any) -> None:
     agent, _ = make_agent()
     recorded = {"text": "Both cities.", "messages": [COMPOSED, COMPONENTS]}
     task = agent.text("Compare", scripted={"compose": recorded})
-    assert [m.get("createSurface", {}).get("surfaceId") for m in a2ui_messages(task)][
-        0
-    ] == "compare-1"
+    first = a2ui_messages(task)[0]
+    assert first["createSurface"]["surfaceId"] == "compare-1"
     assert final_text(task) == "Both cities."
 
 
