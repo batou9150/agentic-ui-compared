@@ -5,7 +5,8 @@
   "author": "Baptiste PIRAULT",
   "workspaces": [
     "mcp-apps/views",
-    "a2ui/client"
+    "a2ui/client",
+    "compare"
   ],
   "engines": {
     "node": ">=24"

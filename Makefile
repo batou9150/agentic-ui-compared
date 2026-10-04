@@ -1,6 +1,6 @@
 ENV_FILE := $(if $(wildcard .env),--env-file .env,)
 
-.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views a2ui a2ui-agent a2ui-client
+.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views a2ui a2ui-agent a2ui-client compare
 
 install:
 	uv sync
@@ -44,3 +44,9 @@ a2ui-client:
 # Both, in parallel.
 a2ui:
 	$(MAKE) -j2 a2ui-agent a2ui-client
+
+# ---- Comparison harness ----------------------------------------------------
+
+# Both backends twice (Scripted: fixtures, Live: real API) + UI on :8080.
+compare: mcp-apps-views
+	./scripts/compare.sh
