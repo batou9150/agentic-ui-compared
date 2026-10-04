@@ -1,0 +1,26 @@
+[project]
+name = "mcp-apps-server"
+version = "0.1.0"
+description = "MCP server exposing weather_core as tools linked to ui:// views (MCP Apps)."
+license = "MIT"
+authors = [{ name = "Baptiste PIRAULT" }]
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "weather-core",
+    "mcp==2.3.0",
+    "uvicorn==0.54.0",
+    "starlette==1.7.0",
+]
+
+[project.scripts]
+mcp-apps-server = "mcp_apps_server.__main__:main"
+
+[tool.uv.sources]
+weather-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_apps_server"]

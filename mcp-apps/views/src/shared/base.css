@@ -1,0 +1,98 @@
+/* Fallbacks only: the host's style variables override these (MCP Apps theming). */
+:root {
+  color-scheme: light dark;
+  --color-text-primary: light-dark(#1f2937, #f3f4f6);
+  --color-text-secondary: light-dark(#6b7280, #9ca3af);
+  --color-text-danger: light-dark(#b91c1c, #f87171);
+  --color-background-primary: light-dark(#ffffff, #1a1a1a);
+  --color-background-secondary: light-dark(#f3f4f6, #262626);
+  --color-border-primary: light-dark(#e5e7eb, #374151);
+  --color-ring-primary: light-dark(#3b82f6, #60a5fa);
+  --border-radius-md: 8px;
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 12px;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: var(--color-background-primary);
+}
+h2 {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+}
+.muted {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+.error {
+  color: var(--color-text-danger);
+}
+.card {
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--border-radius-md);
+  padding: 12px;
+  background: var(--color-background-primary);
+}
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.big {
+  font-size: 2.25rem;
+  font-weight: 700;
+}
+.icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 4px 16px;
+  margin-top: 8px;
+}
+button {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border-primary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+button[aria-pressed="true"] {
+  outline: 2px solid var(--color-ring-primary);
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.attribution {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+.attribution a {
+  color: inherit;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+.clock {
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  margin: 6px 0;
+}
+.icon.small {
+  font-size: 1.5rem;
+}
