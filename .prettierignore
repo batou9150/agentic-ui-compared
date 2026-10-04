@@ -6,3 +6,4 @@ package-lock.json
 core/src/weather_core/fixtures/
 .playwright-mcp/
 *.md
+measurements/
