@@ -85,7 +85,8 @@ export class MetricsCollector {
       mode,
       networkBytes: network.reduce((sum, e) => sum + e.bytes, 0),
       uiBytes: this.uiBytes,
-      bridgeMessages: this.entries.filter((e) => e.channel === "bridge").length,
+      // The harness pings each view to time its render: not part of the protocol cost.
+      bridgeMessages: this.entries.filter((e) => e.channel === "bridge" && !e.kind.startsWith("ping")).length,
       roundTrips: network.filter((e) => e.roundTrip).length,
       firstRenderMs: elapsed(this.firstRenderAt),
       totalMs: elapsed(this.endedAt),

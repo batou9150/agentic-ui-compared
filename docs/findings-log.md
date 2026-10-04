@@ -88,3 +88,19 @@
 - Harness: Scripted and Live need different backend instances (fixtures +
   frozen clock vs live API); `make compare` runs both pairs, no protocol
   change needed. macOS bash 3.2 needs care in the launcher script.
+
+## Measurement method (2026-10-04)
+
+- "First render" is measured the same way on both sides: the UI has applied
+  the data (A2UI: MessageProcessor processed the messages; MCP Apps: the
+  view answered a ping sent after tool-result, i.e. its ontoolresult ran)
+  plus two animation frames. Pitfalls met on the way, worth a line:
+  - Playwright's fake clock replaces performance.now and rAF: never time
+    with it (e2e uses it for S4 clocks, measurements do not).
+  - The ext-apps App SDK reports its startup size right after `initialized`;
+    that size-changed can reach the host after the host sent the result, so
+    "first size change after the result" is not a render signal.
+  - The harness ping is excluded from the host-view message counts.
+- Bytes are JSON bodies (SSE framing and HTTP headers excluded, same rule on
+  both sides). Round trips = HTTP requests to the backend after connection
+  setup (MCP initialize / tools/list and the A2A agent card are excluded).

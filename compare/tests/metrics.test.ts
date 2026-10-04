@@ -24,6 +24,8 @@ describe("MetricsCollector", () => {
     c.record(entry({ direction: "in", bytes: 900 }));
     c.record(entry({ channel: "bridge", bytes: 5000 }));
     c.record(entry({ bytes: 50, roundTrip: true }));
+    c.record(entry({ channel: "bridge", kind: "ping" }));
+    c.record(entry({ channel: "bridge", kind: "ping → result" }));
     c.addUiBytes(1234);
     const m = c.snapshot("S1", "scripted");
     expect(m).toMatchObject({ networkBytes: 1050, roundTrips: 2, bridgeMessages: 1, uiBytes: 1234 });

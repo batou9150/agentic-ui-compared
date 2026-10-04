@@ -13,6 +13,7 @@ const RECORDED = import.meta.glob("../../../scenarios/recorded/*.json", {
 }) as Record<string, unknown>;
 
 const A2UI_KINDS = new Set(["createSurface", "updateComponents", "updateDataModel", "deleteSurface"]);
+const DATA_KINDS = new Set(["updateComponents", "updateDataModel"]);
 
 @customElement("a2ui-pane")
 export class A2uiPane extends LitElement implements Pane {
@@ -43,8 +44,16 @@ export class A2uiPane extends LitElement implements Pane {
         });
         this.dispatchEvent(new CustomEvent("log"));
       },
-      onRendered: () => this.metrics.markRendered(),
-      onText: () => this.metrics.markRendered(),
+      // Only paints that follow data received in this run count (a frame
+      // scheduled by the previous run can fire after start()).
+      onRendered: () => {
+        if (!this.metrics.log.some((e) => e.direction === "in" && DATA_KINDS.has(e.kind))) return;
+        this.metrics.markRendered();
+        this.dispatchEvent(new CustomEvent("log")); // refresh the inspector
+      },
+      onText: () => {
+        if (this.metrics.log.some((e) => e.direction === "in")) this.metrics.markRendered();
+      },
       onTurnEnd: ({ metadata }) => {
         const usage = metadata?.usage as
           { llm_calls?: number; input_tokens?: number; output_tokens?: number } | undefined;

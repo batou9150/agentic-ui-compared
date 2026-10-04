@@ -19,9 +19,13 @@ export const SIDES: Side[] = ["mcp", "a2ui"];
 // Scripted backends freeze "now" at this instant (scripts/compare.sh).
 export const FROZEN = new Date("2026-10-04T12:00:00Z");
 
-export async function openHarness(page: Page, query = ""): Promise<void> {
-  await page.clock.install({ time: FROZEN });
-  await page.clock.resume(); // time flows from the frozen instant: clocks still tick
+export async function openHarness(page: Page, query = "", { fakeClock = true } = {}): Promise<void> {
+  // The fake clock also replaces performance.now() and requestAnimationFrame:
+  // right for asserting clocks, wrong for timing (measurements turn it off).
+  if (fakeClock) {
+    await page.clock.install({ time: FROZEN });
+    await page.clock.resume(); // time flows from the frozen instant: clocks still tick
+  }
   await page.goto(`/?${query}`);
   await expect(page.locator("main.panes")).toHaveAttribute("data-ready", "true", { timeout: 40_000 });
 }

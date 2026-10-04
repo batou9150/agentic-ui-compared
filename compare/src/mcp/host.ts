@@ -186,6 +186,7 @@ export class McpHost {
       const bridge = await view;
       await bridge.sendToolInput({ arguments: args });
       await bridge.sendToolResult(result);
+      void this.afterRender(bridge).then(() => this.hooks.rendered());
     } else {
       this.hooks.rendered(); // text-only tool: the text is the render
     }
@@ -212,6 +213,20 @@ export class McpHost {
       this.html.set(uri, entry);
     }
     return entry;
+  }
+
+  /**
+   * Resolves once the view has rendered the result: the view answers a ping
+   * only after handling the messages before it (its ontoolresult builds the
+   * DOM synchronously), then two frames let the browser paint. The views are
+   * same-site with the host, so they share its event loop and frames. The
+   * A2UI pane measures the same way (messages applied + two frames).
+   */
+  private async afterRender(bridge: AppBridge): Promise<void> {
+    await (bridge as unknown as { request(r: { method: string }): Promise<unknown> }).request({
+      method: "ping",
+    });
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   }
 
   private async mountView(uri: string, container: HTMLElement): Promise<AppBridge> {
@@ -241,10 +256,8 @@ export class McpHost {
       { serverTools: {}, updateModelContext: { text: {} }, logging: {} },
       { hostContext: this.context },
     );
-    let sawResult = false;
     bridge.onsizechange = ({ height }) => {
       if (height !== undefined) frame.style.height = `${Math.ceil(height)}px`;
-      if (sawResult) this.hooks.rendered(); // the view laid out the data
     };
     bridge.onupdatemodelcontext = async ({ content }) => {
       const text = (content ?? []).map((c) => (c.type === "text" ? c.text : "")).join("\n");
@@ -256,11 +269,6 @@ export class McpHost {
     await bridge.connect(new LoggingTransport(transport, "bridge", (e) => this.hooks.log(e)));
     await bridge.sendSandboxResourceReady({ html });
     await initialized;
-    const sendResult = bridge.sendToolResult.bind(bridge);
-    bridge.sendToolResult = async (params) => {
-      sawResult = true;
-      return sendResult(params);
-    };
     this.bridges.add(bridge);
     return bridge;
   }

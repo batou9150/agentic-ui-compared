@@ -1,6 +1,6 @@
 ENV_FILE := $(if $(wildcard .env),--env-file .env,)
 
-.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views a2ui a2ui-agent a2ui-client compare compare-scripted e2e
+.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views a2ui a2ui-agent a2ui-client compare compare-scripted e2e measure
 
 install:
 	uv sync
@@ -58,3 +58,11 @@ compare-scripted: mcp-apps-views
 # Playwright e2e on both panes, Scripted mode (starts compare-scripted itself).
 e2e:
 	npm run e2e -w scenarios
+
+# ---- Measurements ----------------------------------------------------------
+
+# Median of N Scripted runs per scenario + code and artifact sizes.
+# Writes measurements/summary.json, docs/measurements.md, COMPARISON.md block.
+# Live token/LLM numbers: make measure ARGS="--mode live --runs 3" (uses Gemini).
+measure:
+	uv run python scripts/measure.py $(ARGS)

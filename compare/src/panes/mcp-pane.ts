@@ -34,7 +34,10 @@ export class McpPane extends LitElement implements Pane {
           this.dispatchEvent(new CustomEvent("log"));
         },
         uiBytes: (n) => this.metrics.addUiBytes(n),
-        rendered: () => this.metrics.markRendered(),
+        rendered: () => {
+          this.metrics.markRendered();
+          this.dispatchEvent(new CustomEvent("log")); // refresh the inspector
+        },
         modelContext: (text) => this.agent?.addModelContext(text),
       },
       this.theme,
