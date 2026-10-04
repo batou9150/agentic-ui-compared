@@ -23,3 +23,4 @@ blob-report/
 .env
 .DS_Store
 measurements/raw/
+.playwright-mcp/

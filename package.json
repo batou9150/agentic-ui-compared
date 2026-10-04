@@ -1,0 +1,26 @@
+{
+  "name": "agentic-ui-compared",
+  "private": true,
+  "license": "MIT",
+  "author": "Baptiste PIRAULT",
+  "workspaces": [
+    "mcp-apps/views"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.12.0",
+    "prettier": "3.9.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0"
+  },
+  "type": "module",
+  "scripts": {
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

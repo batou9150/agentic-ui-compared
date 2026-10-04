@@ -26,6 +26,8 @@ dated header of `COMPARISON.md`.
 | a2ui-agent-sdk | 0.7.0 (import `a2ui`) | a2ui agent |
 | a2ui-core | 0.2.0 | a2ui agent (transitive, pinned) |
 | a2a-sdk | 0.3.26 | a2ui agent (capped `<0.4` by a2ui-agent-sdk 0.7.0) |
+| uvicorn | 0.54.0 | mcp-apps server |
+| starlette | 1.7.0 | mcp-apps server (CORS) |
 | google-genai | 2.28.0 | a2ui agent, compare live bridge |
 | pyyaml | 6.0.3 | scenarios loader |
 | jsonschema | 4.26.0 | A2UI message validation in tests |
@@ -49,9 +51,10 @@ dated header of `COMPARISON.md`.
 | chart.js | 4.5.1 | forecast chart (same library on both sides) |
 | vite | 8.3.2 | all front-end builds |
 | vite-plugin-singlefile | 2.3.3 | self-contained `ui://` views |
-| typescript | 7.0.2 | all TS |
+| typescript | 6.0.3 | all TS (7.0.2 is latest, but typescript-eslint 8.71 supports `<6.1`) |
 | @playwright/test | 1.63.0 | e2e |
 | eslint | 10.12.0 | lint |
+| typescript-eslint | 8.71.0 | lint |
 | prettier | 3.9.9 | format |
 
 ## Model

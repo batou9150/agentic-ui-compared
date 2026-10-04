@@ -1,0 +1,8 @@
+dist/
+node_modules/
+.venv/
+uv.lock
+package-lock.json
+core/src/weather_core/fixtures/
+.playwright-mcp/
+*.md
