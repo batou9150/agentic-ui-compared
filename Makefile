@@ -1,6 +1,6 @@
 ENV_FILE := $(if $(wildcard .env),--env-file .env,)
 
-.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views a2ui a2ui-agent a2ui-client compare compare-scripted e2e measure
+.PHONY: install test lint typecheck fixtures mcp-apps mcp-apps-views a2ui a2ui-agent a2ui-client compare compare-scripted e2e measure gifs record-s5
 
 install:
 	uv sync
@@ -8,6 +8,7 @@ install:
 
 test:
 	uv run pytest
+	npm test
 
 lint:
 	uv run ruff check .
@@ -15,7 +16,8 @@ lint:
 	npm run lint
 
 typecheck:
-	uv run mypy core/src mcp-apps/server/src a2ui/agent/src
+	uv run mypy -p weather_core -p mcp_apps_server -p a2ui_agent
+	uv run mypy scripts
 	npm run typecheck
 
 # Re-record Open-Meteo fixtures (a few dozen live requests, run sparingly).
@@ -66,3 +68,12 @@ e2e:
 # Live token/LLM numbers: make measure ARGS="--mode live --runs 3" (uses Gemini).
 measure:
 	uv run python scripts/measure.py $(ARGS)
+
+# Side-by-side GIFs for the docs (Scripted mode, needs ffmpeg).
+gifs:
+	./scripts/record_gifs.sh
+
+# Record the S5 layout the A2UI agent composes in Live mode (needs Gemini and
+# the Live A2UI agent running); Scripted mode then replays it.
+record-s5:
+	uv run $(ENV_FILE) python scripts/record_s5.py
