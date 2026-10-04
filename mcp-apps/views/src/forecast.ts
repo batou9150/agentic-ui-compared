@@ -70,7 +70,11 @@ function renderForecast(f: Payload): void {
       "article",
       { class: "card", "data-testid": "forecast-card" },
       el("h2", { "data-testid": "place-name" }, placeLabel(f.place)),
-      el("p", { class: "muted" }, `${f.days}-day forecast`),
+      el(
+        "p",
+        { class: "muted", "data-testid": "forecast-subtitle" },
+        `${f.days}-day forecast · ${f.units === "metric" ? "°C" : "°F"}`,
+      ),
       el(
         "div",
         { class: "row", "data-testid": "forecast-controls" },
