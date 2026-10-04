@@ -191,3 +191,14 @@ a2ui-pane.a2ui-light {
 .attribution a {
   color: inherit;
 }
+/* Long agent texts (tool summaries) are clamped the same way on both panes. */
+.msg.agent {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  cursor: pointer;
+}
+.msg.agent:hover {
+  -webkit-line-clamp: unset;
+}

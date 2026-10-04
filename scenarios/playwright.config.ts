@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import { fileURLToPath } from "node:url";
+
+const REPO = fileURLToPath(new URL("..", import.meta.url));
 
 const CI = !!process.env.CI;
 
@@ -17,7 +20,8 @@ export default defineConfig({
     viewport: { width: 1400, height: 1000 },
   },
   webServer: {
-    command: "make -C .. compare-scripted",
+    command: "make compare-scripted",
+    cwd: REPO,
     url: "http://localhost:8080/api/config",
     reuseExistingServer: !CI,
     timeout: 120_000,

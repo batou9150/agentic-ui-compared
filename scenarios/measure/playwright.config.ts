@@ -10,6 +10,6 @@ export default defineConfig({
   webServer: {
     ...base.webServer!,
     // Live measurements need the Live backends too.
-    command: process.env.MEASURE_MODE === "live" ? "make -C ../.. compare" : "make -C ../.. compare-scripted",
+    command: process.env.MEASURE_MODE === "live" ? "make compare" : "make compare-scripted",
   },
 });
