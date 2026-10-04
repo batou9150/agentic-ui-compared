@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Everything runs offline: Open-Meteo fixtures, no LLM.
+  OPEN_METEO_MODE: fixtures
+
+jobs:
+  checks:
+    name: Lint, types, unit and protocol tests, builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.9.21"
+          enable-cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: uv sync --locked
+      - run: npm ci
+      - name: Lint
+        run: make lint
+      - name: Types
+        run: make typecheck
+      - name: Build (views, A2UI client, harness)
+        run: npm run build
+      - name: Python tests (core, MCP Apps server, A2UI agent)
+        run: uv run pytest --cov=weather_core --cov-report=term-missing:skip-covered
+      - name: Harness unit tests
+        run: npm test -w compare
+
+  e2e:
+    name: Playwright e2e (Scripted mode, both panes)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.9.21"
+          enable-cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: uv sync --locked
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: make e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces
+          path: scenarios/test-results/
+          retention-days: 7
