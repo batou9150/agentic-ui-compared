@@ -26,7 +26,9 @@ winner: the two approaches answer different questions.
   surfaces) owns the layout, within the client's catalog.
 - **Off-script requests (S5) are where they split.** The MCP App can only
   repeat the single-city chart it was built with; the A2UI agent can compose
-  a new two-city chart, at the price of a large schema in every prompt and of
+  a new two-city chart, at the price of a large schema in every prompt
+  (about 8 K input tokens per LLM call in Live mode, against under 1 K on
+  the MCP side), a slow composition (26 s for the S5 chart with Gemini) and
   output that has to be validated, and checked for correctness.
 - **Interactivity costs about the same.** A click in either UI is one round
   trip to the backend with no LLM call; MCP Apps adds a few local
@@ -56,8 +58,12 @@ counters do not move.
 
 **S5: off-script ("Compare Paris and Tokyo over the next 7 days on one
 chart").** Left: two separate single-city charts, the only view available.
-Right: one composed chart. In Scripted mode the right side replays a recorded
-composition (see the Live mode note below).
+Right: one composed chart. In Scripted mode the right side replays the
+layout Gemini composed in a Live run (`scenarios/recorded/S5-a2ui-compose.json`,
+validated against the catalog on replay; see the Live results below). The
+values in that chart are the ones from the Live run (recorded on
+2026-10-05), so they do not match the fixture data on the left, which
+starts on 2026-10-04.
 
 ![S5 side by side](docs/media/S5.gif)
 
@@ -208,7 +214,9 @@ text. Nothing breaks, nothing new appears either.
 With A2UI the same three layouts are designed surfaces, built by Python code
 from tool results, and the LLM is told to compose a surface itself only when
 none fits. That works, with caveats measured or observed here: the catalog
-schema adds 28 K characters to every prompt; composed JSON must be validated
+schema adds 28 K characters (about 8 K tokens) to every prompt, and
+composing the S5 chart took 26 s with Gemini against 3 s for the MCP side's
+first chart (Live results below); composed JSON must be validated
 (the executor validates and retries once, invalid layouts are not shown); and
 a valid layout can still be wrong. Open-Meteo returns each city's days from
 its own local "today", so a Paris + Tokyo chart sharing one axis can be off
@@ -257,11 +265,62 @@ third-party host would compare two LLM stacks. The harness removes that:
   model: the MCP side runs a small agent loop of its own over the MCP tools,
   in place of a host's LLM.
 
-**Live mode status:** implemented but not yet run with Gemini credentials at
-the time of writing. LLM call and token numbers, and the recorded S5
-composition (currently a hand-written placeholder, labeled as such in
-`scenarios/recorded/S5-a2ui-compose.json`), will be added after the first
-Live run (`make record-s5`, `make measure ARGS="--mode live --runs 3"`).
+**Live mode results** (`make measure ARGS="--mode live --runs 3"`, live
+Open-Meteo data, so the numbers vary more than in Scripted mode):
+
+<!-- measurements-live:start -->
+Measured on 2026-10-05 (live mode, median of 3 runs after one warm-up; Darwin arm64, Node v25.4.0, Python 3.13.7). Reproduce with `make measure ARGS="--mode live --runs 3"`.
+
+**Per scenario** (network = bytes on the wire between UI and backend, JSON bodies; UI payload = ui:// HTML + view data for MCP Apps, A2UI messages for A2UI; first render = from the prompt to the requested information painted)
+
+| Scenario | Side | Network | UI payload | Round trips | Host-view messages | First render (p10-p90) |
+|---|---|---|---|---|---|---|
+| S1 | MCP Apps | 236.6 KB | 235.0 KB | 2 | 7 | 1112 ms (1001-1746) |
+| S1 | A2UI | 3.6 KB | 1.8 KB | 1 | 0 | 1311 ms (1226-1492) |
+| S2 | MCP Apps | 238.6 KB | 236.4 KB | 3 | 13 | 1125 ms (1092-1355) |
+| S2 | A2UI | 7.4 KB | 4.0 KB | 2 | 0 | 1292 ms (1229-2459) |
+| S3 | MCP Apps | 421.0 KB | 415.8 KB | 4 | 15 | 1169 ms (812-1224) |
+| S3 | A2UI | 9.4 KB | 4.6 KB | 3 | 0 | 1292 ms (1199-2487) |
+| S4 | MCP Apps | 237.9 KB | 236.1 KB | 2 | 7 | 1042 ms (910-1816) |
+| S4 | A2UI | 4.6 KB | 2.8 KB | 1 | 0 | 1424 ms (1266-1426) |
+| S5 | MCP Apps | 410.2 KB | 407.3 KB | 3 | 12 | 3078 ms (1930-3204) |
+| S5 | A2UI | 2.5 KB | 1.1 KB | 1 | 0 | 26358 ms (26251-27081) |
+
+| Scenario | Side | LLM calls | Input tokens | Output tokens |
+|---|---|---|---|---|
+| S1 | MCP Apps | 2 | 1702 | 27 |
+| S1 | A2UI | 2 | 16650 | 27 |
+| S2 | MCP Apps | 2 | 1735 | 27 |
+| S2 | A2UI | 2 | 16711 | 28 |
+| S3 | MCP Apps | 2 | 1914 | 28 |
+| S3 | A2UI | 2 | 16895 | 28 |
+| S4 | MCP Apps | 2 | 1829 | 43 |
+| S4 | A2UI | 2 | 16889 | 45 |
+| S5 | MCP Apps | 2 | 2603 | 57 |
+| S5 | A2UI | 3 | 36283 | 1622 |
+<!-- measurements-live:end -->
+
+How to read them:
+
+- **Latency is the model's.** For S1 to S4 both sides take one to one and a
+  half seconds, nearly all of it two Gemini calls (pick the tool, then answer
+  in text); the UI renders as soon as the tool returns, before the second
+  call ends. The protocol differences of the Scripted table (tens of ms) are
+  lost in that noise.
+- **Tokens differ by an order of magnitude.** Each A2UI call carries the
+  catalog schema and composition rules (about 8 K input tokens, paid even
+  when a designed surface is used, because the model must be able to compose
+  at any turn); the MCP side's loop only sends tool definitions. Caveat: a
+  real MCP host has its own, much larger system prompt; what is compared here
+  is what each approach adds.
+- **S5 is the expensive case.** The A2UI agent fetched both forecasts, then
+  generated about 1.6 K output tokens of A2UI JSON: 26 s before anything is
+  painted, against 3 s for the first MCP chart (which then shows only one
+  city per chart). The recorded composition was valid on the first try;
+  the measured runs were not instrumented for retries (every one made 3 LLM
+  calls, the recording 2).
+- Clicks never involve the LLM on either side, so their cost matches Scripted
+  mode.
 
 ### Spec gaps and how they were handled
 
