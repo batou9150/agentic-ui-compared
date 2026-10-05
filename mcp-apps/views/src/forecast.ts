@@ -99,7 +99,17 @@ async function update(change: { days?: number; units?: Units }): Promise<void> {
   if (!current) return;
   root.querySelectorAll("button").forEach((b) => (b.disabled = true));
   const args = { place_id: current.place.id, days: current.days, units: current.units, ...change };
-  const result = await app.callServerTool({ name: "get_forecast", arguments: args });
+  let result: CallToolResult;
+  try {
+    result = await app.callServerTool({ name: "get_forecast", arguments: args });
+  } catch (error) {
+    // Keep the last chart and its (re-enabled) controls, with a note.
+    renderForecast(current);
+    root.append(
+      el("p", { class: "error", "data-testid": "view-error" }, `Update failed: ${(error as Error).message}`),
+    );
+    return;
+  }
   render(result);
   if (!result.isError && current) {
     await app.updateModelContext({

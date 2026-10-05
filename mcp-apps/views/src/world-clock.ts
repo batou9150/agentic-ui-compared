@@ -91,12 +91,18 @@ function scheduleRefresh(data: Payload): void {
   const placeIds = data.items.flatMap((i) => (i.kind === "weather" ? [i.place.id] : []));
   if (placeIds.length === 0) return;
   refreshTimer = window.setTimeout(async () => {
-    render(
-      await app.callServerTool({
-        name: "get_world_clock",
-        arguments: { place_ids: placeIds, units: data.units },
-      }),
-    );
+    try {
+      render(
+        await app.callServerTool({
+          name: "get_world_clock",
+          arguments: { place_ids: placeIds, units: data.units },
+        }),
+      );
+    } catch (error) {
+      // Keep the clocks ticking on the last weather and try again later.
+      console.error("World clock refresh failed", error);
+      scheduleRefresh(data);
+    }
   }, REFRESH_MS);
 }
 
