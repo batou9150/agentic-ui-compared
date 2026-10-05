@@ -42,6 +42,12 @@ All recordings come from the comparison UI in Scripted mode (no LLM, recorded
 Open-Meteo data), MCP Apps on the left, A2UI on the right, protocol inspector
 open. Reproduce with `make gifs`.
 
+**S1: current weather card.** One tool call, one designed card on each side.
+Left: the host reads the `ui://` view and passes it the result. Right: the
+agent sends `createSurface`, `updateComponents` and `updateDataModel`.
+
+![S1 side by side](docs/media/S1.gif)
+
 **S2: ambiguous city, the click flows back.** Left: the view calls
 `tools/call` through the host, then `ui/update-model-context`. Right: an A2UI
 `action` goes to the agent, which replaces the picker in place.
@@ -62,10 +68,13 @@ counters do not move.
 chart").** Left: two separate single-city charts, the only view available.
 Right: one composed chart. In Scripted mode the right side replays the
 layout Gemini composed in a Live run (`scenarios/recorded/S5-a2ui-compose.json`,
-validated against the catalog on replay; see the Live results below). The
-values in that chart are the ones from the Live run (recorded on
-2026-10-05), so they do not match the fixture data on the left, which
-starts on 2026-10-04.
+validated against the catalog on replay; see the Live results below). Its
+layout is Gemini's, unchanged; its numbers were swapped for the fixture data
+the left side uses (`scripts/record_s5.py --rebind`), so both sides show the
+same forecasts. Look at the Tokyo lines: Tokyo's days start one day later
+than Paris's, so under the shared day labels they are shifted by a day
+compared with the Tokyo chart on the left. That is the pitfall described in
+the S5 finding below, kept on purpose.
 
 ![S5 side by side](docs/media/S5.gif)
 
@@ -158,6 +167,10 @@ How to read them:
   MCP Apps also needs `resources/read`, sent in parallel with `tools/call`.
 - **Round trips** are equal for clicks: one per action on each side. MCP
   Apps has one more per new view (`resources/read`), not on the critical path.
+- **S4 over time** is not equal: the MCP view also refreshes the weather
+  through the server every 15 minutes (one more round trip each time), while
+  the A2UI side never does (see the spec gaps). The runs measured here are
+  shorter than 15 minutes, so the table does not show it.
 - **Code size.** A2UI needs more code in this repo because it includes a
   client app (A2A connection, chat), which a real MCP host provides for MCP
   Apps; the 411 lines of the harness's minimal MCP Apps host show what that
@@ -209,6 +222,13 @@ against their schemas, and the official renderer sanitizes Markdown with
 DOMPurify. There is no iframe and no CSP to manage, but every capability the
 agent may use must exist in the client beforehand, and a hostile agent can
 still build a convincing fake form out of trusted components.
+
+The harness itself is a local demo, not a hardened host. The `/api/llm`
+endpoint that holds the Gemini credentials only answers JSON requests from
+the harness origin (capped at 1 MB), so another site open in the browser
+cannot spend the quota. The sandbox proxy page is looser than a production
+one: it accepts the harness from any localhost port, relays messages to the
+view with a `*` target and does not filter what the view sends up.
 
 ### Theming and brand consistency
 
@@ -341,7 +361,9 @@ How to read them:
   painted, against 3 s for the first MCP chart (which then shows only one
   city per chart). The recorded composition was valid on the first try;
   the measured runs were not instrumented for retries (every one made 3 LLM
-  calls, the recording 2).
+  calls, the recording 2). Retries are now counted (`composeRetries` in the
+  metrics, a column in this table from the next Live run); the numbers above
+  predate it, so whether the third call was a retry is not settled.
 - Clicks never involve the LLM on either side, so their cost matches Scripted
   mode.
 
