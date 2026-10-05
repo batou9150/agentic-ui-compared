@@ -4,7 +4,8 @@ prompt: "Compare Paris and Tokyo over the next 7 days on one chart"
 # No view was designed for this. In Scripted mode each side replays what its
 # approach can do: MCP Apps can only call its single-city forecast twice;
 # A2UI fetches the data without UI and replays a layout composed by the LLM
-# (recorded from a Live run, validated against the catalog when replayed).
+# (recorded from a Live run, numbers swapped for the fixture data with
+# `scripts/record_s5.py --rebind`, validated against the catalog when replayed).
 steps:
   mcp:
     - tool: get_forecast
