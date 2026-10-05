@@ -104,3 +104,18 @@
 - Bytes are JSON bodies (SSE framing and HTTP headers excluded, same rule on
   both sides). Round trips = HTTP requests to the backend after connection
   setup (MCP initialize / tools/list and the A2A agent card are excluded).
+
+## Real host and Live mode (2026-10-05)
+
+- Claude Desktop as a custom connector over an ngrok tunnel: the server log
+  shows `initialize` with the `io.modelcontextprotocol/ui` extension, then
+  `resources/read` for each view sent in parallel with the first matching
+  `tools/call`. The picker click arrives as a `tools/call` carrying
+  `_meta.progressToken`, issued by the view through the host.
+- Before connecting, the host probes the OAuth discovery endpoints
+  (`/.well-known/oauth-*`, `openid-configuration`); 404s are fine for an
+  unauthenticated server. It also opens a GET SSE stream on `/mcp`.
+- S5 in Claude Desktop: the host drew the two-city chart with its own
+  charting, outside the MCP App. Off-script UI moves to the host.
+- Live measurements first timed out on S5: A2UI composition takes about 26 s,
+  above the harness's default 8 s wait; Live runs now wait up to 120 s.

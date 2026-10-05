@@ -25,7 +25,9 @@ winner: the two approaches answer different questions.
   the look and either the developer (designed surfaces) or the LLM (composed
   surfaces) owns the layout, within the client's catalog.
 - **Off-script requests (S5) are where they split.** The MCP App can only
-  repeat the single-city chart it was built with; the A2UI agent can compose
+  repeat the single-city chart it was built with (a host may fill the gap
+  with its own UI: Claude Desktop drew the two-city chart natively, see
+  Findings); the A2UI agent can compose
   a new two-city chart, at the price of a large schema in every prompt
   (about 8 K input tokens per LLM call in Live mode, against under 1 K on
   the MCP side), a slow composition (26 s for the S5 chart with Gemini) and
@@ -77,7 +79,7 @@ starts on 2026-10-04.
 | Security boundary | Iframe sandbox on a separate origin + CSP from `_meta.ui.csp` | No code crosses: only catalog components can appear |
 | Look and feel | View's CSS, adapted with host CSS variables | Client's CSS variables, agent can only hint (`primaryColor`) |
 | Layout owner | View developer | Surface developer, or the LLM for composed surfaces |
-| Off-script request | Text, or the closest designed view | The LLM composes a new surface from the catalog |
+| Off-script request | Text, the closest designed view, or the host's own UI if it has one | The LLM composes a new surface from the catalog |
 | Custom widgets (chart, clock) | Any library inside the view | Add them to a custom catalog, on agent and client |
 | User action path | View -> host -> `tools/call` -> server | Client -> A2A message (`action`) -> agent |
 | Client-side state (ticking clock) | Plain JS in the view | A custom component in the catalog |
@@ -169,10 +171,23 @@ How to read them:
   (v2.0.3, built standalone and run with Node instead of Bun) and in this
   repo's minimal host. S1 to S4 worked in both, including the picker click,
   the forecast controls and host dark mode.
-- **Real MCP hosts (Claude Desktop, claude.ai): not tested yet.** The server
-  is ready for it (Streamable HTTP, `MCP_APPS_PUBLIC_HOST` for a tunnel).
-  This section will be updated after the test; until then no compatibility
-  with any real host is claimed.
+- **Claude Desktop (tested on 2026-10-05, through an ngrok tunnel, as a
+  custom connector).** S1 to S5 prompts, checked against the server's
+  request log:
+  - S1, S2, S4: the views rendered inline with the host's fonts and colors
+    (host style variables applied). In S2 the picker click reached the server
+    as a `tools/call` sent by the view through the host (`place_id`, no LLM
+    turn) and the card replaced the picker in place.
+  - S3: the forecast view and its chart rendered. The in-view controls (days,
+    °C/°F) were not exercised in this session, so they are not claimed.
+  - S4: clocks rendered; their per-second ticking and the 15-minute weather
+    refresh were not checked over time.
+  - S5: see below; Claude drew the two-city chart itself.
+  - The host reads each `ui://` resource once per conversation, in parallel
+    with the first `tools/call` that needs it, as in this harness.
+- Not tested: claude.ai on the web (its connectors reach the server from
+  the cloud, not from this machine), ChatGPT, VS Code, Goose and other MCP
+  Apps hosts. No compatibility with them is claimed.
 - A2UI surfaces were tested with the official Lit renderer (`@a2ui/lit`
   0.12.0) in this repo's client and harness. Not tested: the Angular and
   React renderers, the ADK dev UI (which renders A2UI v0.8, not v0.9.1).
@@ -209,7 +224,15 @@ they choose to follow the host; A2UI surfaces always look like the client.
 
 With MCP Apps the developer designed three views; when asked for something
 else, the host's LLM can only call the closest tool (twice here) or answer in
-text. Nothing breaks, nothing new appears either.
+text. Nothing breaks, nothing new appears from the server either.
+
+In a real host the host may step in. Asked the S5 prompt, Claude Desktop
+called `get_forecast` for Tokyo (it already had Paris from an earlier turn),
+showed the Tokyo view, then drew a Paris vs Tokyo chart with its own
+built-in charting, outside the MCP App. The off-script UI then belongs to the
+host: its look, its correctness and its availability depend on the host, not
+on the server author. In this harness the minimal host has no such feature,
+which is why the left side of S5 shows two single-city charts.
 
 With A2UI the same three layouts are designed surfaces, built by Python code
 from tool results, and the LLM is told to compose a surface itself only when
