@@ -10,7 +10,20 @@ export interface LlmRequest {
   functions: FunctionDeclaration[];
 }
 
+const MAX_BODY = 1_000_000; // a long Live conversation stays well under 1 MB
+
+function fail(res: ServerResponse, status: number, error: string): void {
+  res.statusCode = status;
+  res.setHeader("content-type", "application/json");
+  res.end(JSON.stringify({ error }));
+}
+
 export function llmHandler(env: Record<string, string>) {
+  // Only the harness page may spend the Gemini quota. Requiring JSON forces a
+  // CORS preflight for any other site, and the Origin check refuses it.
+  const allowedOrigins = new Set(
+    [env.COMPARE_PORT || "8080"].flatMap((port) => [`http://localhost:${port}`, `http://127.0.0.1:${port}`]),
+  );
   let ai: GoogleGenAI | undefined;
   const model = env.AGENT_MODEL || "gemini-3.8-flash";
   const client = () =>
@@ -24,12 +37,15 @@ export function llmHandler(env: Record<string, string>) {
           }));
 
   return async (req: IncomingMessage, res: ServerResponse) => {
-    if (req.method !== "POST") {
-      res.statusCode = 405;
-      return res.end();
-    }
+    if (req.method !== "POST") return fail(res, 405, "Method not allowed.");
+    if (!allowedOrigins.has(req.headers.origin ?? "")) return fail(res, 403, "Forbidden origin.");
+    if (!req.headers["content-type"]?.startsWith("application/json"))
+      return fail(res, 415, "Expected application/json.");
     let body = "";
-    for await (const chunk of req) body += chunk;
+    for await (const chunk of req) {
+      body += chunk;
+      if (body.length > MAX_BODY) return fail(res, 413, "Request body too large.");
+    }
     try {
       const { system, contents, functions } = JSON.parse(body) as LlmRequest;
       const response = await client().models.generateContent({
@@ -46,9 +62,9 @@ export function llmHandler(env: Record<string, string>) {
         }),
       );
     } catch (error) {
-      res.statusCode = 502;
-      res.setHeader("content-type", "application/json");
-      res.end(JSON.stringify({ error: (error as Error).message }));
+      // The SDK error can carry project or quota details: log it, keep it off the page.
+      console.error("[api/llm]", error);
+      fail(res, 502, "The LLM call failed; see the dev server log.");
     }
   };
 }
