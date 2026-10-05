@@ -74,8 +74,8 @@ with a Gemini API key: see `.env.example`.
 
 Expose port 3001 with a tunnel (for example `ngrok http 3001`), set
 `MCP_APPS_PUBLIC_HOST` to the tunnel host name in `.env`, run `make mcp-apps`,
-then add `https://<tunnel host>/mcp` as a custom connector in your MCP
-client. Tested with Claude Desktop; results in
+then add `https://<tunnel host>/mcp` to your MCP client (as a custom
+connector, or through `npx mcp-remote <url>` for Claude Desktop). Tested with Claude Desktop; results in
 [COMPARISON.md](COMPARISON.md#where-it-renders-what-was-actually-tested).
 
 ## Versions

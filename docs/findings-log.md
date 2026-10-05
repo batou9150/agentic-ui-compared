@@ -107,7 +107,8 @@
 
 ## Real host and Live mode (2026-10-05)
 
-- Claude Desktop as a custom connector over an ngrok tunnel: the server log
+- Claude Desktop through `mcp-remote` (stdio bridge in
+  `claude_desktop_config.json`) over an ngrok tunnel: the server log
   shows `initialize` with the `io.modelcontextprotocol/ui` extension, then
   `resources/read` for each view sent in parallel with the first matching
   `tools/call`. The picker click arrives as a `tools/call` carrying

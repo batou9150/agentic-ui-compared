@@ -171,8 +171,8 @@ How to read them:
   (v2.0.3, built standalone and run with Node instead of Bun) and in this
   repo's minimal host. S1 to S4 worked in both, including the picker click,
   the forecast controls and host dark mode.
-- **Claude Desktop (tested on 2026-10-05, through an ngrok tunnel, as a
-  custom connector).** S1 to S5 prompts, checked against the server's
+- **Claude Desktop (tested on 2026-10-05, through an ngrok tunnel and the
+  `mcp-remote` stdio bridge declared in `claude_desktop_config.json`).** S1 to S5 prompts, checked against the server's
   request log:
   - S1, S2, S4: the views rendered inline with the host's fonts and colors
     (host style variables applied). In S2 the picker click reached the server
