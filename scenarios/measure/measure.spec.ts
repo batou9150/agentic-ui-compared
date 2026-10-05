@@ -17,7 +17,7 @@ test(`measure ${MODE}, ${RUNS} runs per scenario`, async ({ page }) => {
     await page.getByTestId("scenario-select").selectOption(scenario.id);
     // One warm-up run (JIT, caches, connections), then the measured runs.
     for (let i = 0; i <= RUNS; i++) {
-      await run(page);
+      await run(page, { timeout: MODE === "live" ? 120_000 : 8_000 }); // Live waits for Gemini
       for (const side of SIDES) {
         for (const step of scenario.steps[side]) {
           if (MODE === "live" && step.kind !== "click") continue;

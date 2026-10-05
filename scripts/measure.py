@@ -6,8 +6,9 @@
    network bytes, UI payload bytes, round trips, time to first render
    (driven through the comparison UI by Playwright, read from its JSON export)
 
-Outputs measurements/summary.json and docs/measurements.md, and refreshes the
-generated block of COMPARISON.md between its measurement markers.
+Outputs measurements/summary.json and docs/measurements.md (summary-live.json
+and measurements-live.md in Live mode), and refreshes the matching generated
+block of COMPARISON.md between its measurement markers.
 
 Usage: uv run python scripts/measure.py [--runs 10] [--mode scripted|live]
                                         [--reuse]  (skip the browser runs)
@@ -27,10 +28,20 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "measurements" / "raw"
-SUMMARY = ROOT / "measurements" / "summary.json"
-REPORT = ROOT / "docs" / "measurements.md"
 COMPARISON = ROOT / "COMPARISON.md"
-MARK_START, MARK_END = "<!-- measurements:start -->", "<!-- measurements:end -->"
+
+
+def outputs(mode: str) -> tuple[Path, Path, str, str]:
+    """Summary, report and COMPARISON.md markers; Scripted and Live are kept apart."""
+    suffix = "" if mode == "scripted" else f"-{mode}"
+    tag = "measurements" + suffix
+    return (
+        ROOT / "measurements" / f"summary{suffix}.json",
+        ROOT / "docs" / f"measurements{suffix}.md",
+        f"<!-- {tag}:start -->",
+        f"<!-- {tag}:end -->",
+    )
+
 
 # What counts as each side's code, by role. Business logic lives in core/ and
 # is shared, so it is not counted for either side.
@@ -207,36 +218,45 @@ def markdown(summary: dict[str, Any]) -> str:
     loc, art, env = summary["loc"], summary["artifacts"], summary["environment"]
     lines = [
         f"Measured on {env['date']} ({env['mode']} mode, median of {env['runs']} runs after one warm-up; "
-        f"{env['platform']}, Node {env['node']}, Python {env['python']}). Reproduce with `make measure`.",
-        "",
-        "**UI code size** (lines of code, blank and comment-only lines excluded; core/ is shared and not counted)",
-        "",
-        "| Side | Role | LOC |",
-        "|---|---|---|",
-    ]
-    for side, groups in loc.items():
-        for role, value in groups.items():
-            if role != "total":
-                lines.append(f"| {side} | {role} | {value['loc']} |")
-        lines.append(f"| **{side}** | **total** | **{groups['total']}** |")
-    lines += [
-        "",
-        "**Artifacts**",
-        "",
-        "| Artifact | Raw | Gzip |",
-        "|---|---|---|",
-    ]
-    for name, s in art["mcp_apps_views"].items():
-        lines.append(
-            f"| MCP Apps view `{name}` (self-contained, sent per session) | {kb(s['raw'])} | {kb(s['gzip'])} |"
+        f"{env['platform']}, Node {env['node']}, Python {env['python']}). Reproduce with `make measure"
+        + (
+            ""
+            if env["mode"] == "scripted"
+            else f' ARGS="--mode {env["mode"]} --runs {env["runs"]}"'
         )
-    b = art["a2ui_client_bundle"]
-    lines.append(
-        f"| A2UI client bundle (renderer + catalog + A2A client, loaded once) | {kb(b['raw'])} | {kb(b['gzip'])} |"
-    )
-    lines.append(
-        f"| A2UI system prompt with the catalog schema (Live mode, every LLM call) | {art['a2ui_system_prompt_chars']:,} chars | |"
-    )
+        + "`.",
+    ]
+    if env["mode"] == "scripted":  # code and artifacts do not depend on the mode
+        lines += [
+            "",
+            "**UI code size** (lines of code, blank and comment-only lines excluded; core/ is shared and not counted)",
+            "",
+            "| Side | Role | LOC |",
+            "|---|---|---|",
+        ]
+        for side, groups in loc.items():
+            for role, value in groups.items():
+                if role != "total":
+                    lines.append(f"| {side} | {role} | {value['loc']} |")
+            lines.append(f"| **{side}** | **total** | **{groups['total']}** |")
+        lines += [
+            "",
+            "**Artifacts**",
+            "",
+            "| Artifact | Raw | Gzip |",
+            "|---|---|---|",
+        ]
+        for name, s in art["mcp_apps_views"].items():
+            lines.append(
+                f"| MCP Apps view `{name}` (self-contained, sent per session) | {kb(s['raw'])} | {kb(s['gzip'])} |"
+            )
+        b = art["a2ui_client_bundle"]
+        lines.append(
+            f"| A2UI client bundle (renderer + catalog + A2A client, loaded once) | {kb(b['raw'])} | {kb(b['gzip'])} |"
+        )
+        lines.append(
+            f"| A2UI system prompt with the catalog schema (Live mode, every LLM call) | {art['a2ui_system_prompt_chars']:,} chars | |"
+        )
     lines += [
         "",
         "**Per scenario** (network = bytes on the wire between UI and backend, JSON bodies; "
@@ -263,8 +283,9 @@ def markdown(summary: dict[str, Any]) -> str:
         ]
         for scenario, sides in summary["scenarios"].items():
             for side, s in sides.items():
+                label = "MCP Apps" if side == "mcp" else "A2UI"
                 lines.append(
-                    f"| {scenario} | {side} | {s['llmCalls']} | {s['inputTokens']:.0f} | {s['outputTokens']:.0f} |"
+                    f"| {scenario} | {label} | {s['llmCalls']:.0f} | {s['inputTokens']:.0f} | {s['outputTokens']:.0f} |"
                 )
     return "\n".join(lines) + "\n"
 
@@ -304,20 +325,21 @@ def main() -> None:
         "artifacts": artifact_report(),
         "scenarios": aggregate(rows),
     }
-    SUMMARY.parent.mkdir(parents=True, exist_ok=True)
-    SUMMARY.write_text(json.dumps(summary, indent=2) + "\n")
+    summary_path, report_path, mark_start, mark_end = outputs(args.mode)
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(summary, indent=2) + "\n")
     body = markdown(summary)
-    REPORT.write_text(
+    report_path.write_text(
         "# Measurements\n\nGenerated by `scripts/measure.py`; do not edit by hand.\n\n"
         + body
     )
     if COMPARISON.exists():
         text = COMPARISON.read_text()
-        if MARK_START in text and MARK_END in text:
-            head, rest = text.split(MARK_START, 1)
-            _, tail = rest.split(MARK_END, 1)
-            COMPARISON.write_text(f"{head}{MARK_START}\n{body}{MARK_END}{tail}")
-    print(f"wrote {SUMMARY.relative_to(ROOT)} and {REPORT.relative_to(ROOT)}")
+        if mark_start in text and mark_end in text:
+            head, rest = text.split(mark_start, 1)
+            _, tail = rest.split(mark_end, 1)
+            COMPARISON.write_text(f"{head}{mark_start}\n{body}{mark_end}{tail}")
+    print(f"wrote {summary_path.relative_to(ROOT)} and {report_path.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

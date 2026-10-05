@@ -30,9 +30,9 @@ export async function openHarness(page: Page, query = "", { fakeClock = true } =
   await expect(page.locator("main.panes")).toHaveAttribute("data-ready", "true", { timeout: 40_000 });
 }
 
-export async function run(page: Page): Promise<void> {
+export async function run(page: Page, { timeout = 8_000 } = {}): Promise<void> {
   await page.getByTestId("run-both").click();
-  await expect(page.locator("main.panes")).toHaveAttribute("data-running", "false");
+  await expect(page.locator("main.panes")).toHaveAttribute("data-running", "false", { timeout });
 }
 
 /** MCP Apps views: the inner (srcdoc) frames of the sandbox proxies. */
