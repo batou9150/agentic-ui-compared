@@ -172,6 +172,7 @@ NUMERIC = [
     "llmCalls",
     "inputTokens",
     "outputTokens",
+    "composeRetries",
 ]
 
 
@@ -278,14 +279,20 @@ def markdown(summary: dict[str, Any]) -> str:
     if env["mode"] == "live":
         lines += [
             "",
-            "| Scenario | Side | LLM calls | Input tokens | Output tokens |",
-            "|---|---|---|---|---|",
+            "| Scenario | Side | LLM calls | Input tokens | Output tokens | Compose retries |",
+            "|---|---|---|---|---|---|",
         ]
         for scenario, sides in summary["scenarios"].items():
             for side, s in sides.items():
                 label = "MCP Apps" if side == "mcp" else "A2UI"
+                retries = s.get(
+                    "composeRetries"
+                )  # absent from runs before it was recorded
+                retries_cell = (
+                    "n/a" if side == "mcp" or retries is None else f"{retries:.0f}"
+                )
                 lines.append(
-                    f"| {scenario} | {label} | {s['llmCalls']:.0f} | {s['inputTokens']:.0f} | {s['outputTokens']:.0f} |"
+                    f"| {scenario} | {label} | {s['llmCalls']:.0f} | {s['inputTokens']:.0f} | {s['outputTokens']:.0f} | {retries_cell} |"
                 )
     return "\n".join(lines) + "\n"
 

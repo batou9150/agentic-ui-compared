@@ -24,6 +24,7 @@ export interface RunMetrics {
   llmCalls: number;
   inputTokens: number;
   outputTokens: number;
+  composeRetries: number; // A2UI Live: re-asks after an invalid composed layout
 }
 
 export class MetricsCollector {
@@ -31,7 +32,7 @@ export class MetricsCollector {
   private startedAt: number | null = null;
   private firstRenderAt: number | null = null;
   private endedAt: number | null = null;
-  private llm = { calls: 0, input: 0, output: 0 };
+  private llm = { calls: 0, input: 0, output: 0, retries: 0 };
   private uiBytes = 0;
 
   constructor(
@@ -43,7 +44,7 @@ export class MetricsCollector {
     this.entries = [];
     this.startedAt = this.now();
     this.firstRenderAt = this.endedAt = null;
-    this.llm = { calls: 0, input: 0, output: 0 };
+    this.llm = { calls: 0, input: 0, output: 0, retries: 0 };
     this.uiBytes = 0;
   }
 
@@ -65,8 +66,9 @@ export class MetricsCollector {
     if (this.startedAt !== null) this.endedAt = this.now();
   }
 
-  addLlmUsage(calls: number, input: number, output: number): void {
+  addLlmUsage(calls: number, input: number, output: number, retries = 0): void {
     this.llm.calls += calls;
+    this.llm.retries += retries;
     this.llm.input += input;
     this.llm.output += output;
   }
@@ -93,6 +95,7 @@ export class MetricsCollector {
       llmCalls: this.llm.calls,
       inputTokens: this.llm.input,
       outputTokens: this.llm.output,
+      composeRetries: this.llm.retries,
     };
   }
 }
@@ -110,6 +113,7 @@ export const METRIC_COLUMNS: (keyof RunMetrics)[] = [
   "llmCalls",
   "inputTokens",
   "outputTokens",
+  "composeRetries",
 ];
 
 export function toCsv(rows: RunMetrics[]): string {

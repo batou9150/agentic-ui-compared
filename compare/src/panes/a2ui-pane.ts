@@ -56,9 +56,15 @@ export class A2uiPane extends LitElement implements Pane {
       },
       onTurnEnd: ({ metadata }) => {
         const usage = metadata?.usage as
-          { llm_calls?: number; input_tokens?: number; output_tokens?: number } | undefined;
+          | { llm_calls?: number; input_tokens?: number; output_tokens?: number; compose_retries?: number }
+          | undefined;
         if (usage)
-          this.metrics.addLlmUsage(usage.llm_calls ?? 0, usage.input_tokens ?? 0, usage.output_tokens ?? 0);
+          this.metrics.addLlmUsage(
+            usage.llm_calls ?? 0,
+            usage.input_tokens ?? 0,
+            usage.output_tokens ?? 0,
+            usage.compose_retries ?? 0,
+          );
       },
     };
     await chat.agent.ready();
