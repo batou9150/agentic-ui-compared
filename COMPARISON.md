@@ -30,8 +30,9 @@ winner: the two approaches answer different questions.
   Findings); the A2UI agent can compose
   a new two-city chart, at the price of a large schema in every prompt
   (about 8 K input tokens per LLM call in Live mode, against under 1 K on
-  the MCP side), a slow composition (26 s for the S5 chart with Gemini) and
-  output that has to be validated, and checked for correctness.
+  the MCP side), a slow composition (about 35 s for the S5 chart with Gemini) and
+  output that has to be validated (it failed validation once in 2 of 3
+  measured runs), and checked for correctness.
 - **Interactivity costs about the same.** A click in either UI is one round
   trip to the backend with no LLM call; MCP Apps adds a few local
   host-to-view messages, A2UI can update data without touching the layout.
@@ -258,9 +259,10 @@ With A2UI the same three layouts are designed surfaces, built by Python code
 from tool results, and the LLM is told to compose a surface itself only when
 none fits. That works, with caveats measured or observed here: the catalog
 schema adds 28 K characters (about 8 K tokens) to every prompt, and
-composing the S5 chart took 26 s with Gemini against 3 s for the MCP side's
-first chart (Live results below); composed JSON must be validated
-(the executor validates and retries once, invalid layouts are not shown); and
+composing the S5 chart took about 35 s with Gemini against 2.4 s for the
+MCP side's first chart (Live results below); composed JSON must be validated
+(the executor validates and retries once, invalid layouts are not shown, and
+the first attempt was invalid in 2 of the 3 measured runs); and
 a valid layout can still be wrong. Open-Meteo returns each city's days from
 its own local "today", so a Paris + Tokyo chart sharing one axis can be off
 by one day, which schema validation cannot catch.
@@ -318,34 +320,34 @@ Measured on 2026-10-05 (live mode, median of 3 runs after one warm-up; Darwin ar
 
 | Scenario | Side | Network | UI payload | Round trips | Host-view messages | First render (p10-p90) |
 |---|---|---|---|---|---|---|
-| S1 | MCP Apps | 236.6 KB | 235.0 KB | 2 | 7 | 1112 ms (1001-1746) |
-| S1 | A2UI | 3.6 KB | 1.8 KB | 1 | 0 | 1311 ms (1226-1492) |
-| S2 | MCP Apps | 238.6 KB | 236.4 KB | 3 | 13 | 1125 ms (1092-1355) |
-| S2 | A2UI | 7.4 KB | 4.0 KB | 2 | 0 | 1292 ms (1229-2459) |
-| S3 | MCP Apps | 421.0 KB | 415.8 KB | 4 | 15 | 1169 ms (812-1224) |
-| S3 | A2UI | 9.4 KB | 4.6 KB | 3 | 0 | 1292 ms (1199-2487) |
-| S4 | MCP Apps | 237.9 KB | 236.1 KB | 2 | 7 | 1042 ms (910-1816) |
-| S4 | A2UI | 4.6 KB | 2.8 KB | 1 | 0 | 1424 ms (1266-1426) |
-| S5 | MCP Apps | 410.2 KB | 407.3 KB | 3 | 12 | 3078 ms (1930-3204) |
-| S5 | A2UI | 2.5 KB | 1.1 KB | 1 | 0 | 26358 ms (26251-27081) |
+| S1 | MCP Apps | 236.6 KB | 234.9 KB | 2 | 7 | 1138 ms (862-2076) |
+| S1 | A2UI | 3.6 KB | 1.8 KB | 1 | 0 | 1921 ms (1830-2165) |
+| S2 | MCP Apps | 238.6 KB | 236.4 KB | 3 | 12 | 1333 ms (1053-1517) |
+| S2 | A2UI | 7.4 KB | 4.0 KB | 2 | 0 | 1246 ms (1188-1335) |
+| S3 | MCP Apps | 421.2 KB | 416.0 KB | 4 | 16 | 1229 ms (970-1480) |
+| S3 | A2UI | 9.4 KB | 4.6 KB | 3 | 0 | 2236 ms (1059-2422) |
+| S4 | MCP Apps | 238.0 KB | 236.1 KB | 2 | 7 | 1690 ms (812-2278) |
+| S4 | A2UI | 4.6 KB | 2.8 KB | 1 | 0 | 2107 ms (1226-2906) |
+| S5 | MCP Apps | 410.4 KB | 407.4 KB | 3 | 12 | 2430 ms (2012-7940) |
+| S5 | A2UI | 2.6 KB | 1.2 KB | 1 | 0 | 34932 ms (27620-44083) |
 
-| Scenario | Side | LLM calls | Input tokens | Output tokens |
-|---|---|---|---|---|
-| S1 | MCP Apps | 2 | 1702 | 27 |
-| S1 | A2UI | 2 | 16650 | 27 |
-| S2 | MCP Apps | 2 | 1735 | 27 |
-| S2 | A2UI | 2 | 16711 | 28 |
-| S3 | MCP Apps | 2 | 1914 | 28 |
-| S3 | A2UI | 2 | 16895 | 28 |
-| S4 | MCP Apps | 2 | 1829 | 43 |
-| S4 | A2UI | 2 | 16889 | 45 |
-| S5 | MCP Apps | 2 | 2603 | 57 |
-| S5 | A2UI | 3 | 36283 | 1622 |
+| Scenario | Side | LLM calls | Input tokens | Output tokens | Compose retries |
+|---|---|---|---|---|---|
+| S1 | MCP Apps | 2 | 1681 | 27 | n/a |
+| S1 | A2UI | 2 | 16689 | 27 | 0 |
+| S2 | MCP Apps | 2 | 1733 | 31 | n/a |
+| S2 | A2UI | 2 | 16666 | 28 | 0 |
+| S3 | MCP Apps | 2 | 1905 | 28 | n/a |
+| S3 | A2UI | 2 | 16909 | 28 | 0 |
+| S4 | MCP Apps | 2 | 1834 | 43 | n/a |
+| S4 | A2UI | 2 | 16867 | 45 | 0 |
+| S5 | MCP Apps | 2 | 2605 | 54 | n/a |
+| S5 | A2UI | 3 | 36792 | 1622 | 1 |
 <!-- measurements-live:end -->
 
 How to read them:
 
-- **Latency is the model's.** For S1 to S4 both sides take one to one and a
+- **Latency is the model's.** For S1 to S4 both sides take one to two and a
   half seconds, nearly all of it two Gemini calls (pick the tool, then answer
   in text); the UI renders as soon as the tool returns, before the second
   call ends. The protocol differences of the Scripted table (tens of ms) are
@@ -357,13 +359,16 @@ How to read them:
   real MCP host has its own, much larger system prompt; what is compared here
   is what each approach adds.
 - **S5 is the expensive case.** The A2UI agent fetched both forecasts, then
-  generated about 1.6 K output tokens of A2UI JSON: 26 s before anything is
-  painted, against 3 s for the first MCP chart (which then shows only one
-  city per chart). The recorded composition was valid on the first try;
-  the measured runs were not instrumented for retries (every one made 3 LLM
-  calls, the recording 2). Retries are now counted (`composeRetries` in the
-  metrics, a column in this table from the next Live run); the numbers above
-  predate it, so whether the third call was a retry is not settled.
+  generated about 0.8 K output tokens of A2UI JSON per attempt: 30 to 41 s
+  before anything is painted (median 35 s), against 2.4 s for the first MCP
+  chart (which then shows only one city per chart).
+- **Composed layouts fail validation often.** In 2 of the 3 measured S5 runs
+  the first layout Gemini wrote was rejected by the catalog schema, and the
+  agent asked once more (the third LLM call, and why the median tokens are
+  double those of a single attempt). Every retry was valid, so a layout was
+  always shown. The warm-up run and the recording replayed in Scripted mode
+  were valid on the first try. The validation errors themselves are not
+  recorded.
 - Clicks never involve the LLM on either side, so their cost matches Scripted
   mode.
 

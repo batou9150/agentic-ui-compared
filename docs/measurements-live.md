@@ -8,26 +8,26 @@ Measured on 2026-10-05 (live mode, median of 3 runs after one warm-up; Darwin ar
 
 | Scenario | Side | Network | UI payload | Round trips | Host-view messages | First render (p10-p90) |
 |---|---|---|---|---|---|---|
-| S1 | MCP Apps | 236.6 KB | 235.0 KB | 2 | 7 | 1112 ms (1001-1746) |
-| S1 | A2UI | 3.6 KB | 1.8 KB | 1 | 0 | 1311 ms (1226-1492) |
-| S2 | MCP Apps | 238.6 KB | 236.4 KB | 3 | 13 | 1125 ms (1092-1355) |
-| S2 | A2UI | 7.4 KB | 4.0 KB | 2 | 0 | 1292 ms (1229-2459) |
-| S3 | MCP Apps | 421.0 KB | 415.8 KB | 4 | 15 | 1169 ms (812-1224) |
-| S3 | A2UI | 9.4 KB | 4.6 KB | 3 | 0 | 1292 ms (1199-2487) |
-| S4 | MCP Apps | 237.9 KB | 236.1 KB | 2 | 7 | 1042 ms (910-1816) |
-| S4 | A2UI | 4.6 KB | 2.8 KB | 1 | 0 | 1424 ms (1266-1426) |
-| S5 | MCP Apps | 410.2 KB | 407.3 KB | 3 | 12 | 3078 ms (1930-3204) |
-| S5 | A2UI | 2.5 KB | 1.1 KB | 1 | 0 | 26358 ms (26251-27081) |
+| S1 | MCP Apps | 236.6 KB | 234.9 KB | 2 | 7 | 1138 ms (862-2076) |
+| S1 | A2UI | 3.6 KB | 1.8 KB | 1 | 0 | 1921 ms (1830-2165) |
+| S2 | MCP Apps | 238.6 KB | 236.4 KB | 3 | 12 | 1333 ms (1053-1517) |
+| S2 | A2UI | 7.4 KB | 4.0 KB | 2 | 0 | 1246 ms (1188-1335) |
+| S3 | MCP Apps | 421.2 KB | 416.0 KB | 4 | 16 | 1229 ms (970-1480) |
+| S3 | A2UI | 9.4 KB | 4.6 KB | 3 | 0 | 2236 ms (1059-2422) |
+| S4 | MCP Apps | 238.0 KB | 236.1 KB | 2 | 7 | 1690 ms (812-2278) |
+| S4 | A2UI | 4.6 KB | 2.8 KB | 1 | 0 | 2107 ms (1226-2906) |
+| S5 | MCP Apps | 410.4 KB | 407.4 KB | 3 | 12 | 2430 ms (2012-7940) |
+| S5 | A2UI | 2.6 KB | 1.2 KB | 1 | 0 | 34932 ms (27620-44083) |
 
-| Scenario | Side | LLM calls | Input tokens | Output tokens |
-|---|---|---|---|---|
-| S1 | MCP Apps | 2 | 1702 | 27 |
-| S1 | A2UI | 2 | 16650 | 27 |
-| S2 | MCP Apps | 2 | 1735 | 27 |
-| S2 | A2UI | 2 | 16711 | 28 |
-| S3 | MCP Apps | 2 | 1914 | 28 |
-| S3 | A2UI | 2 | 16895 | 28 |
-| S4 | MCP Apps | 2 | 1829 | 43 |
-| S4 | A2UI | 2 | 16889 | 45 |
-| S5 | MCP Apps | 2 | 2603 | 57 |
-| S5 | A2UI | 3 | 36283 | 1622 |
+| Scenario | Side | LLM calls | Input tokens | Output tokens | Compose retries |
+|---|---|---|---|---|---|
+| S1 | MCP Apps | 2 | 1681 | 27 | n/a |
+| S1 | A2UI | 2 | 16689 | 27 | 0 |
+| S2 | MCP Apps | 2 | 1733 | 31 | n/a |
+| S2 | A2UI | 2 | 16666 | 28 | 0 |
+| S3 | MCP Apps | 2 | 1905 | 28 | n/a |
+| S3 | A2UI | 2 | 16909 | 28 | 0 |
+| S4 | MCP Apps | 2 | 1834 | 43 | n/a |
+| S4 | A2UI | 2 | 16867 | 45 | 0 |
+| S5 | MCP Apps | 2 | 2605 | 54 | n/a |
+| S5 | A2UI | 3 | 36792 | 1622 | 1 |

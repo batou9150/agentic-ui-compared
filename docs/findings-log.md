@@ -120,3 +120,7 @@
   charting, outside the MCP App. Off-script UI moves to the host.
 - Live measurements first timed out on S5: A2UI composition takes about 26 s,
   above the harness's default 8 s wait; Live runs now wait up to 120 s.
+- With compose retries counted (2026-10-05, 3 Live runs + warm-up): the
+  first S5 layout failed catalog validation in 2 of 3 measured runs; one
+  retry fixed it each time. The earlier "3 LLM calls vs 2 in the recording"
+  was this retry. S5 first render is now 30 to 41 s (median 35 s).
