@@ -217,6 +217,16 @@ def test_unknown_city_is_a_text_error(make_agent: Any) -> None:
     assert "No location found" in final_text(task)
 
 
+def test_unknown_units_is_a_text_error(make_agent: Any) -> None:
+    agent, _ = make_agent()
+    task = agent.text(
+        "?",
+        scripted={"tool": "get_weather", "args": {"city": "Paris", "units": "celsius"}},
+    )
+    assert "Unknown units 'celsius'" in final_text(task)
+    assert a2ui_messages(task) == []
+
+
 def test_live_tool_call_renders_designed_surface(make_agent: Any) -> None:
     agent, _ = make_agent(
         turns=[call("get_weather", city="Tokyo"), say("Here is the weather in Tokyo.")]
