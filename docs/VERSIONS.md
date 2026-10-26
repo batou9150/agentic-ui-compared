@@ -15,7 +15,7 @@ dated header of `COMPARISON.md`.
 | A2UI v1.0 | not used | Candidate for stable | `specification/v1_0/` (renames messages to `agent_to_renderer` / `renderer_to_agent`) |
 | A2UI over A2A extension | `https://a2ui.org/a2a-extension/a2ui/v0.9.1` | Released | `application/a2ui+json` DataParts |
 
-## Python (Python 3.13, managed with uv)
+## Python (Python 3.14, managed with uv)
 
 | Package | Version | Used by |
 |---|---|---|

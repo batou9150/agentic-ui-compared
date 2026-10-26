@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "MCP server exposing weather_core as tools linked to ui:// views (MCP Apps)."
 license = "MIT"
 authors = [{ name = "Baptiste PIRAULT" }]
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14,<3.15"
 dependencies = [
     "weather-core",
     "mcp==2.3.0",
