@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "ADK agent exposing weather_core and emitting A2UI messages over A2A."
 license = "MIT"
 authors = [{ name = "Baptiste PIRAULT" }]
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14,<3.15"
 dependencies = [
     "weather-core",
     "google-adk==2.11.0",

@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "The same weather app built twice, with MCP Apps and with A2UI, compared."
 license = "MIT"
 authors = [{ name = "Baptiste PIRAULT" }]
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14,<3.15"
 dependencies = ["weather-core", "mcp-apps-server", "a2ui-agent"]
 
 [tool.uv]
@@ -31,14 +31,14 @@ dev = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "RUF", "SIM"]
 ignore = ["E501"]  # the formatter owns line length; long f-strings stay readable
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 strict = true
 plugins = ["pydantic.mypy"]
 

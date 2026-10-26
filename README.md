@@ -45,7 +45,7 @@ Requirements: [uv](https://docs.astral.sh/uv/), Node 24+, `make`. Optional:
 Gemini credentials for Live mode, `ffmpeg` for GIFs.
 
 ```bash
-make install          # Python 3.13 workspace (uv) + npm workspaces
+make install          # Python 3.14 workspace (uv) + npm workspaces
 cp .env.example .env  # optional: Gemini settings for Live mode
 make compare          # both backends (Scripted + Live) and the UI
 ```
