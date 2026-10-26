@@ -26,5 +26,8 @@
     "build": "npm run build -w mcp-apps/views -w a2ui/client -w compare",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm test -w compare"
+  },
+  "overrides": {
+    "dompurify": "3.4.17"
   }
 }

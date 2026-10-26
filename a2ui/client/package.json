@@ -19,6 +19,6 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "vite": "8.3.2"
+    "vite": "8.3.5"
   }
 }
