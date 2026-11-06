@@ -17,6 +17,11 @@ Results, numbers and a decision guide: **[COMPARISON.md](COMPARISON.md)**.
   code); the client renders them with its own trusted component catalog and
   sends user actions back to the agent.
 
+AG-UI is a third name in this space but not a third approach: it is a
+transport that can carry A2UI. The A2UI side also runs over AG-UI (same
+agent, renderer and catalog), so the repo compares A2UI over A2A with A2UI
+over AG-UI too.
+
 ## What is in the repo
 
 ```mermaid
@@ -53,7 +58,9 @@ make compare          # both backends (Scripted + Live) and the UI
 Open http://localhost:8080, pick a scenario and press **Run on both**.
 Scripted mode needs no API key and no network: tool calls are replayed on
 recorded Open-Meteo data, and clicks are yours (the banner lists them).
-Add `?side=mcp` or `?side=a2ui` to show one side full width.
+Add `?side=mcp` or `?side=a2ui` to show one side full width, and
+`?a2ui=agui` to run the A2UI pane over AG-UI instead of A2A (same agent,
+renderer and catalog; see [COMPARISON.md](COMPARISON.md#transport-a2ui-over-a2a-vs-over-ag-ui)).
 
 | Command | What it does |
 |---|---|

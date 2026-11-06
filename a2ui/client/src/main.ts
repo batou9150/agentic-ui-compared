@@ -1,4 +1,4 @@
-import { chatStyles } from "./index";
+import { chatStyles } from "./chat";
 
 const style = document.createElement("style");
 style.textContent = chatStyles;

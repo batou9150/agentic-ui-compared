@@ -1,4 +1,5 @@
-"""A2A server for the A2UI agent: agent card, request handler, CORS."""
+"""A2A server for the A2UI agent (agent card, request handler, CORS), with the
+same agent over AG-UI under /agui."""
 
 import os
 
@@ -9,8 +10,10 @@ from a2a.types import AgentCapabilities, AgentCard, AgentSkill
 from a2ui.a2a.extension import get_a2ui_agent_extension
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
+from starlette.routing import Mount
 from weather_core import WeatherService, create_service
 
+from .agui import create_agui_app
 from .catalog import A2UI_VERSION, BASIC_CATALOG_ID, WEATHER_CATALOG_ID
 from .executor import WeatherAgentExecutor
 
@@ -54,6 +57,8 @@ def create_app(
         agent_executor=executor, task_store=InMemoryTaskStore()
     )
     app = A2AStarletteApplication(agent_card=card, http_handler=handler).build()
+    # Same agent over AG-UI (the compare harness reaches it through its relay).
+    app.router.routes.append(Mount("/agui", app=create_agui_app(executor.service)))
     app.add_middleware(
         CORSMiddleware,
         allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",

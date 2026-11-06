@@ -3,6 +3,7 @@ import { createServer, type RequestListener, type Server } from "node:http";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import { buildCsp, parseCsp } from "./server/csp";
+import { aguiRelay } from "./server/agui";
 import { llmHandler } from "./server/llm";
 
 const SANDBOX_HTML = readFileSync(fileURLToPath(new URL("./server/sandbox.html", import.meta.url)), "utf8");
@@ -15,6 +16,11 @@ function harness(env: Record<string, string>): Plugin {
     name: "compare-harness",
     configureServer(server) {
       server.middlewares.use("/api/llm", llmHandler(env));
+      const a2uiAgents = {
+        scripted: `http://localhost:${env.SCRIPTED_A2UI_AGENT_PORT || 10102}`,
+        live: `http://localhost:${env.A2UI_AGENT_PORT || 10002}`,
+      };
+      server.middlewares.use("/api/agui", aguiRelay(a2uiAgents, env));
       server.middlewares.use("/api/config", (_req, res) => {
         res.setHeader("content-type", "application/json");
         res.end(
@@ -22,12 +28,14 @@ function harness(env: Record<string, string>): Plugin {
             // Scripted: backends on recorded fixtures with a frozen clock.
             scripted: {
               mcpUrl: `http://localhost:${env.SCRIPTED_MCP_APPS_PORT || 3101}/mcp`,
-              a2uiUrl: `http://localhost:${env.SCRIPTED_A2UI_AGENT_PORT || 10102}`,
+              a2uiUrl: a2uiAgents.scripted,
+              aguiUrl: "/api/agui/scripted",
             },
             // Live: backends on the real Open-Meteo API (cached), Gemini on both sides.
             live: {
               mcpUrl: `http://localhost:${env.MCP_APPS_PORT || 3001}/mcp`,
-              a2uiUrl: `http://localhost:${env.A2UI_AGENT_PORT || 10002}`,
+              a2uiUrl: a2uiAgents.live,
+              aguiUrl: "/api/agui/live",
             },
             sandboxUrl: `http://localhost:${sandboxPort}/sandbox.html`,
             model: env.AGENT_MODEL || "gemini-3.8-flash",

@@ -1,4 +1,5 @@
 dist/
+dist-agui/
 node_modules/
 .venv/
 uv.lock

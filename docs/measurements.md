@@ -12,9 +12,13 @@ Measured on 2026-11-06 (scripted mode, median of 10 runs after one warm-up; Darw
 | MCP Apps | Server (tools, resources, transport) | 215 |
 | **MCP Apps** | **total** | **894** |
 | A2UI | UI (surface builders, catalog: Python + TS custom components) | 545 |
-| A2UI | Agent (tools, prompt, executor, A2A server) | 558 |
-| A2UI | Client app (A2A connection, chat shell) | 285 |
-| **A2UI** | **total** | **1388** |
+| A2UI | Agent (tools, prompt, executor, A2A server) | 634 |
+| A2UI | Client app (A2A connection, chat shell) | 309 |
+| **A2UI** | **total** | **1488** |
+| A2UI over AG-UI (added to the A2UI side, same agent and renderer) | Agent (AG-UI endpoint, tool envelopes, click shim, replay model) | 303 |
+| A2UI over AG-UI (added to the A2UI side, same agent and renderer) | Client (AG-UI connection) | 137 |
+| A2UI over AG-UI (added to the A2UI side, same agent and renderer) | Relay (Node hop running @ag-ui/a2ui-middleware) | 73 |
+| **A2UI over AG-UI (added to the A2UI side, same agent and renderer)** | **total** | **513** |
 | Harness only (not product code) | Minimal MCP Apps host (what a real host provides) | 411 |
 | **Harness only (not product code)** | **total** | **411** |
 
@@ -25,20 +29,27 @@ Measured on 2026-11-06 (scripted mode, median of 10 runs after one warm-up; Darw
 | MCP Apps view `current.html` (self-contained, sent per session) | 234.5 KB | 60.9 KB |
 | MCP Apps view `forecast.html` (self-contained, sent per session) | 402.4 KB | 118.2 KB |
 | MCP Apps view `world-clock.html` (self-contained, sent per session) | 234.1 KB | 60.8 KB |
-| A2UI client bundle (renderer + catalog + A2A client, loaded once) | 788.1 KB | 231.2 KB |
+| A2UI client bundle (renderer + catalog + A2A client, loaded once) | 788.4 KB | 232.3 KB |
+| AG-UI client add-on (AG-UI connection + @ag-ui/client, on top of the A2UI client) | 332.9 KB | 76.1 KB |
 | A2UI system prompt with the catalog schema (Live mode, every LLM call) | 28,608 chars | |
+| Same, AG-UI variant (compose_ui and UI action rules, no reply-format rules) | 28,342 chars | |
 
 **Per scenario** (network = bytes on the wire between UI and backend, JSON bodies; UI payload = ui:// HTML + view data for MCP Apps, A2UI messages for A2UI; first render = from the prompt to the requested information painted)
 
 | Scenario | Side | Network | UI payload | Round trips | Host-view messages | First render (p10-p90) |
 |---|---|---|---|---|---|---|
-| S1 | MCP Apps | 237.0 KB | 235.4 KB | 2 | 7 | 59 ms (57-77) |
-| S1 | A2UI | 3.3 KB | 1.8 KB | 1 | 0 | 3 ms (3-5) |
-| S2 | MCP Apps | 239.0 KB | 236.8 KB | 3 | 12 | 73 ms (57-78) |
-| S2 | A2UI | 7.3 KB | 4.0 KB | 2 | 0 | 4 ms (3-10) |
-| S3 | MCP Apps | 421.3 KB | 416.1 KB | 4 | 15 | 89 ms (84-133) |
-| S3 | A2UI | 9.7 KB | 4.6 KB | 3 | 0 | 5 ms (3-12) |
-| S4 | MCP Apps | 238.4 KB | 236.6 KB | 2 | 6 | 64 ms (57-76) |
-| S4 | A2UI | 4.6 KB | 2.8 KB | 1 | 0 | 3 ms (3-4) |
-| S5 | MCP Apps | 410.8 KB | 407.8 KB | 3 | 12 | 104 ms (94-111) |
-| S5 | A2UI | 9.3 KB | 1.1 KB | 3 | 0 | 5 ms (3-7) |
+| S1 | MCP Apps | 237.0 KB | 235.4 KB | 2 | 7 | 59 ms (58-59) |
+| S1 | A2UI over A2A | 3.3 KB | 1.8 KB | 1 | 0 | 3 ms (3-3) |
+| S1 | A2UI over AG-UI | 6.2 KB | 1.8 KB | 1 | 0 | 18 ms (18-19) |
+| S2 | MCP Apps | 239.0 KB | 236.8 KB | 3 | 12 | 57 ms (56-60) |
+| S2 | A2UI over A2A | 7.3 KB | 4.0 KB | 2 | 0 | 3 ms (3-3) |
+| S2 | A2UI over AG-UI | 17.7 KB | 4.0 KB | 2 | 0 | 18 ms (18-19) |
+| S3 | MCP Apps | 421.3 KB | 416.1 KB | 4 | 15 | 88 ms (86-89) |
+| S3 | A2UI over A2A | 9.7 KB | 4.6 KB | 3 | 0 | 3 ms (3-3) |
+| S3 | A2UI over AG-UI | 34.1 KB | 4.6 KB | 3 | 0 | 22 ms (21-23) |
+| S4 | MCP Apps | 238.4 KB | 236.6 KB | 2 | 6 | 65 ms (57-74) |
+| S4 | A2UI over A2A | 4.6 KB | 2.8 KB | 1 | 0 | 4 ms (3-5) |
+| S4 | A2UI over AG-UI | 8.9 KB | 2.8 KB | 1 | 0 | 19 ms (18-20) |
+| S5 | MCP Apps | 410.8 KB | 407.8 KB | 3 | 12 | 107 ms (104-111) |
+| S5 | A2UI over A2A | 9.3 KB | 1.1 KB | 3 | 0 | 5 ms (4-6) |
+| S5 | A2UI over AG-UI | 34.5 KB | 1.1 KB | 3 | 0 | 17 ms (17-18) |

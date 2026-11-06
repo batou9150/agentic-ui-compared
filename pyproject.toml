@@ -42,6 +42,10 @@ python_version = "3.14"
 strict = true
 plugins = ["pydantic.mypy"]
 
+[[tool.mypy.overrides]]
+module = ["ag_ui_adk", "ag_ui_adk.*"]  # ships no py.typed marker
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

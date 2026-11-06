@@ -6,7 +6,15 @@ import { renderMarkdown } from "@a2ui/markdown-it";
 import { injectBasicCatalogStyles, setMarkdownRenderer } from "@a2ui/web_core/v0_9/basic_catalog";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { A2uiAgentConnection, type ConnectionHooks, type TurnResult } from "./connection";
+import {
+  A2uiAgentConnection,
+  type AgentConnection,
+  type ConnectionHooks,
+  type TurnResult,
+} from "./connection";
+
+export type Transport = "a2a" | "agui";
+type ConnectionClass = new (url: string, hooks: ConnectionHooks) => AgentConnection;
 
 // Text components render Markdown; the official renderer sanitizes with DOMPurify.
 setMarkdownRenderer(renderMarkdown);
@@ -19,12 +27,22 @@ type Item =
 
 @customElement("weather-a2ui-chat")
 export class WeatherA2uiChat extends LitElement {
+  /**
+   * Transports by name. AG-UI is registered by the page that uses it (the
+   * compare harness), so the standalone A2A client does not bundle it.
+   */
+  static readonly transports: Partial<Record<Transport, ConnectionClass>> = {
+    a2a: A2uiAgentConnection,
+  };
+
   @property({ attribute: "agent-url" }) agentUrl = "http://localhost:10002";
+  /** a2a: the agent's A2A endpoint. agui: an AG-UI endpoint with the A2UI middleware. */
+  @property() transport: Transport = "a2a";
   @property({ attribute: false }) hooks: ConnectionHooks = {};
   @property({ type: Boolean, attribute: "hide-input" }) hideInput = false;
   @state() private items: Item[] = [];
   @state() private pending = false;
-  private connection?: A2uiAgentConnection;
+  private connection?: AgentConnection;
 
   // Light DOM, so the A2UI basic catalog styles and the page theme apply.
   protected createRenderRoot() {
@@ -32,8 +50,10 @@ export class WeatherA2uiChat extends LitElement {
     return this;
   }
 
-  get agent(): A2uiAgentConnection {
-    this.connection ??= new A2uiAgentConnection(this.agentUrl, {
+  get agent(): AgentConnection {
+    const Connection = WeatherA2uiChat.transports[this.transport];
+    if (!Connection) throw new Error(`Transport ${this.transport} is not registered.`);
+    this.connection ??= new Connection(this.agentUrl, {
       ...this.hooks,
       onSurface: (surface) => {
         this.items = [...this.items, { kind: "surface", surface }];

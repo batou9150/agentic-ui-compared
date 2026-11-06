@@ -3,7 +3,7 @@ import { LitElement, html, nothing } from "lit";
 import { customElement, query, state } from "lit/decorators.js";
 import "./inspector";
 import type { ProtocolInspector } from "./inspector";
-import { toCsv, type Mode, type RunMetrics } from "./metrics";
+import { toCsv, type Mode, type RunMetrics, type Transport } from "./metrics";
 import "./panes/a2ui-pane";
 import "./panes/mcp-pane";
 import type { Pane, Theme } from "./panes/types";
@@ -19,6 +19,7 @@ const SCENARIOS = loadScenarios(
 interface Endpoints {
   mcpUrl: string;
   a2uiUrl: string;
+  aguiUrl: string;
 }
 
 interface Config {
@@ -29,6 +30,9 @@ interface Config {
 }
 
 const params = new URLSearchParams(location.search);
+// ?a2ui=agui runs the A2UI pane over AG-UI (same agent, renderer and catalog).
+const A2UI_TRANSPORT: Transport = params.get("a2ui") === "agui" ? "agui" : "a2a";
+const transportLabel = (t: Transport) => (t === "agui" ? " over AG-UI" : t === "a2a" ? " over A2A" : "");
 
 @customElement("compare-app")
 export class CompareApp extends LitElement {
@@ -169,10 +173,12 @@ export class CompareApp extends LitElement {
         ? html`<mcp-pane
             .config=${{ ...this.config![this.mode], sandboxUrl: this.config!.sandboxUrl }}
           ></mcp-pane>`
-        : html`<a2ui-pane .config=${this.config![this.mode]}></a2ui-pane>`;
+        : html`<a2ui-pane .config=${{ ...this.config![this.mode], transport: A2UI_TRANSPORT }}></a2ui-pane>`;
     const metrics = side === "mcp" ? this.mcp?.metrics : this.a2ui?.metrics;
     return html`<section class="pane" data-testid="pane-${side}">
-      <h2>${side === "mcp" ? "MCP Apps" : "A2UI"}</h2>
+      <h2 data-testid="pane-title-${side}">
+        ${side === "mcp" ? "MCP Apps" : `A2UI${transportLabel(A2UI_TRANSPORT)}`}
+      </h2>
       <div class="pane-body">${pane}</div>
       ${
         metrics
@@ -256,7 +262,7 @@ export class CompareApp extends LitElement {
               (r) =>
                 html`<tr>
                   <td>${r.scenario}</td>
-                  <td>${r.side}</td>
+                  <td>${r.side}${transportLabel(r.transport)}</td>
                   <td>${r.mode}</td>
                   <td>${r.networkBytes}</td>
                   <td>${r.uiBytes}</td>

@@ -45,17 +45,18 @@
         ]
       },
       "Agent (tools, prompt, executor, A2A server)": {
-        "loc": 558,
+        "loc": 634,
         "files": [
           "a2ui/agent/src/a2ui_agent/__main__.py",
           "a2ui/agent/src/a2ui_agent/agent.py",
           "a2ui/agent/src/a2ui_agent/executor.py",
+          "a2ui/agent/src/a2ui_agent/rendering.py",
           "a2ui/agent/src/a2ui_agent/server.py",
           "a2ui/agent/src/a2ui_agent/tools.py"
         ]
       },
       "Client app (A2A connection, chat shell)": {
-        "loc": 285,
+        "loc": 309,
         "files": [
           "a2ui/client/index.html",
           "a2ui/client/src/chat.ts",
@@ -63,7 +64,28 @@
           "a2ui/client/src/main.ts"
         ]
       },
-      "total": 1388
+      "total": 1488
+    },
+    "A2UI over AG-UI (added to the A2UI side, same agent and renderer)": {
+      "Agent (AG-UI endpoint, tool envelopes, click shim, replay model)": {
+        "loc": 303,
+        "files": [
+          "a2ui/agent/src/a2ui_agent/agui.py"
+        ]
+      },
+      "Client (AG-UI connection)": {
+        "loc": 137,
+        "files": [
+          "a2ui/client/src/agui-connection.ts"
+        ]
+      },
+      "Relay (Node hop running @ag-ui/a2ui-middleware)": {
+        "loc": 73,
+        "files": [
+          "compare/server/agui.ts"
+        ]
+      },
+      "total": 513
     },
     "Harness only (not product code)": {
       "Minimal MCP Apps host (what a real host provides)": {
@@ -94,10 +116,15 @@
       }
     },
     "a2ui_client_bundle": {
-      "raw": 807033,
-      "gzip": 236713
+      "raw": 807294,
+      "gzip": 237838
     },
-    "a2ui_system_prompt_chars": 28608
+    "a2ui_agui_client_addon": {
+      "raw": 340897,
+      "gzip": 77951
+    },
+    "a2ui_system_prompt_chars": 28608,
+    "a2ui_agui_system_prompt_chars": 28342
   },
   "scenarios": {
     "S1": {
@@ -106,20 +133,16 @@
         "networkBytes": 242693.0,
         "uiBytes": 241038.0,
         "bridgeMessages": 7.0,
-        "bridgeMessages_range": [
-          7,
-          8
-        ],
         "roundTrips": 2.0,
-        "firstRenderMs": 58.849999999999994,
+        "firstRenderMs": 58.95,
         "firstRenderMs_p10_p90": [
-          56.910000000000004,
-          76.69
+          58.120000000000005,
+          59.31999999999999
         ],
-        "totalMs": 35.3,
+        "totalMs": 33.4,
         "totalMs_p10_p90": [
-          33.55,
-          41.91
+          32.47,
+          34.86
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -132,15 +155,36 @@
         "uiBytes": 1837.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 3.45,
+        "firstRenderMs": 3.05,
         "firstRenderMs_p10_p90": [
-          2.94,
-          5.26
+          2.6900000000000004,
+          3.3200000000000003
         ],
-        "totalMs": 4.75,
+        "totalMs": 4.25,
         "totalMs_p10_p90": [
-          4.41,
-          6.49
+          3.9,
+          4.64
+        ],
+        "llmCalls": 0.0,
+        "inputTokens": 0.0,
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
+      },
+      "a2ui-agui": {
+        "n": 10,
+        "networkBytes": 6299.0,
+        "uiBytes": 1837.0,
+        "bridgeMessages": 0.0,
+        "roundTrips": 1.0,
+        "firstRenderMs": 18.2,
+        "firstRenderMs_p10_p90": [
+          17.84,
+          19.349999999999998
+        ],
+        "totalMs": 20.049999999999997,
+        "totalMs_p10_p90": [
+          19.29,
+          23.11
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -155,15 +199,15 @@
         "uiBytes": 242526.0,
         "bridgeMessages": 12.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 72.80000000000001,
+        "firstRenderMs": 57.150000000000006,
         "firstRenderMs_p10_p90": [
-          56.980000000000004,
-          77.78999999999999
+          56.470000000000006,
+          60.36
         ],
-        "totalMs": 38.1,
+        "totalMs": 34.0,
         "totalMs_p10_p90": [
-          34.77,
-          53.7
+          33.25,
+          36.019999999999996
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -176,15 +220,36 @@
         "uiBytes": 4141.0,
         "bridgeMessages": 0.0,
         "roundTrips": 2.0,
-        "firstRenderMs": 3.65,
+        "firstRenderMs": 2.8,
         "firstRenderMs_p10_p90": [
-          2.73,
-          10.370000000000001
+          2.7,
+          2.9099999999999997
         ],
-        "totalMs": 5.15,
+        "totalMs": 4.05,
         "totalMs_p10_p90": [
-          4.119999999999999,
-          14.8
+          3.8899999999999997,
+          4.42
+        ],
+        "llmCalls": 0.0,
+        "inputTokens": 0.0,
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
+      },
+      "a2ui-agui": {
+        "n": 10,
+        "networkBytes": 18174.0,
+        "uiBytes": 4141.0,
+        "bridgeMessages": 0.0,
+        "roundTrips": 2.0,
+        "firstRenderMs": 18.35,
+        "firstRenderMs_p10_p90": [
+          17.97,
+          18.779999999999998
+        ],
+        "totalMs": 19.5,
+        "totalMs_p10_p90": [
+          18.79,
+          22.27
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -199,15 +264,15 @@
         "uiBytes": 426086.0,
         "bridgeMessages": 15.0,
         "roundTrips": 4.0,
-        "firstRenderMs": 88.69999999999999,
+        "firstRenderMs": 88.0,
         "firstRenderMs_p10_p90": [
-          83.75,
-          132.67000000000002
+          85.56,
+          89.35
         ],
-        "totalMs": 52.1,
+        "totalMs": 48.0,
         "totalMs_p10_p90": [
-          49.510000000000005,
-          90.53
+          46.61,
+          49.620000000000005
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -220,15 +285,36 @@
         "uiBytes": 4718.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 4.55,
+        "firstRenderMs": 3.25,
         "firstRenderMs_p10_p90": [
-          3.22,
-          11.620000000000001
+          2.9699999999999998,
+          3.4
         ],
-        "totalMs": 9.8,
+        "totalMs": 9.45,
         "totalMs_p10_p90": [
-          8.430000000000001,
-          23.18
+          8.959999999999999,
+          10.3
+        ],
+        "llmCalls": 0.0,
+        "inputTokens": 0.0,
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
+      },
+      "a2ui-agui": {
+        "n": 10,
+        "networkBytes": 34899.0,
+        "uiBytes": 4718.0,
+        "bridgeMessages": 0.0,
+        "roundTrips": 3.0,
+        "firstRenderMs": 21.6,
+        "firstRenderMs_p10_p90": [
+          21.080000000000002,
+          22.54
+        ],
+        "totalMs": 22.6,
+        "totalMs_p10_p90": [
+          22.16,
+          23.720000000000002
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -243,15 +329,15 @@
         "uiBytes": 242246.0,
         "bridgeMessages": 6.0,
         "roundTrips": 2.0,
-        "firstRenderMs": 64.5,
+        "firstRenderMs": 65.15,
         "firstRenderMs_p10_p90": [
-          57.21,
-          76.3
+          56.970000000000006,
+          74.23
         ],
-        "totalMs": 37.5,
+        "totalMs": 37.099999999999994,
         "totalMs_p10_p90": [
-          34.989999999999995,
-          41.93
+          36.400000000000006,
+          41.449999999999996
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -264,15 +350,36 @@
         "uiBytes": 2838.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 3.3499999999999996,
+        "firstRenderMs": 3.6500000000000004,
         "firstRenderMs_p10_p90": [
-          2.92,
-          3.87
+          3.2600000000000002,
+          5.45
         ],
-        "totalMs": 4.9,
+        "totalMs": 5.199999999999999,
         "totalMs_p10_p90": [
-          4.529999999999999,
-          8.499999999999998
+          4.85,
+          10.260000000000002
+        ],
+        "llmCalls": 0.0,
+        "inputTokens": 0.0,
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
+      },
+      "a2ui-agui": {
+        "n": 10,
+        "networkBytes": 9079.0,
+        "uiBytes": 2838.0,
+        "bridgeMessages": 0.0,
+        "roundTrips": 1.0,
+        "firstRenderMs": 18.95,
+        "firstRenderMs_p10_p90": [
+          18.490000000000002,
+          20.32
+        ],
+        "totalMs": 19.65,
+        "totalMs_p10_p90": [
+          19.1,
+          21.35
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -287,15 +394,15 @@
         "uiBytes": 417601.0,
         "bridgeMessages": 12.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 103.69999999999999,
+        "firstRenderMs": 107.1,
         "firstRenderMs_p10_p90": [
-          94.22999999999999,
-          110.84
+          103.76999999999998,
+          110.88000000000002
         ],
-        "totalMs": 110.65,
+        "totalMs": 105.4,
         "totalMs_p10_p90": [
-          102.2,
-          126.95
+          103.28999999999999,
+          108.63
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -308,15 +415,36 @@
         "uiBytes": 1109.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 5.4,
+        "firstRenderMs": 4.85,
         "firstRenderMs_p10_p90": [
-          3.1100000000000003,
-          7.449999999999998
+          4.0200000000000005,
+          5.91
         ],
-        "totalMs": 26.45,
+        "totalMs": 26.049999999999997,
         "totalMs_p10_p90": [
-          21.020000000000003,
-          27.71
+          24.799999999999997,
+          28.71
+        ],
+        "llmCalls": 0.0,
+        "inputTokens": 0.0,
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
+      },
+      "a2ui-agui": {
+        "n": 10,
+        "networkBytes": 35359.0,
+        "uiBytes": 1109.0,
+        "bridgeMessages": 0.0,
+        "roundTrips": 3.0,
+        "firstRenderMs": 17.1,
+        "firstRenderMs_p10_p90": [
+          16.59,
+          17.6
+        ],
+        "totalMs": 58.0,
+        "totalMs_p10_p90": [
+          56.0,
+          60.629999999999995
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,

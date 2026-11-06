@@ -40,9 +40,9 @@ from weather_core import (
     WeatherService,
 )
 
-from . import surfaces
 from .agent import a2ui_parser, build_agent
 from .catalog import A2UI_VERSION, validate
+from .rendering import SurfaceRenderer
 from .tools import UI_SINK, UiRequest, make_tools
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ class WeatherAgentExecutor(AgentExecutor):
         self._agent_factory = agent_factory or (lambda: build_agent(self.tools))
         self._runner: Runner | None = None
         self._sessions = InMemorySessionService()
-        self._surface_counts: dict[str, int] = defaultdict(int)
+        self.renderer = SurfaceRenderer()
         self._ui_notes: dict[str, list[str]] = defaultdict(list)
 
     # ---- A2A entry point ----------------------------------------------------
@@ -115,28 +115,6 @@ class WeatherAgentExecutor(AgentExecutor):
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
         raise NotImplementedError("Cancellation is not supported in this demo.")
 
-    # ---- rendering designed surfaces ---------------------------------------
-
-    def _surface_id(self, conv: str, kind: str) -> str:
-        self._surface_counts[conv] += 1
-        return f"{kind}-{self._surface_counts[conv]}"
-
-    def render(self, conv: str, req: UiRequest) -> list[surfaces.Message]:
-        result, units = req.result, Units(req.args.get("units", "metric"))
-        if isinstance(result, Resolution):
-            then = "forecast" if req.tool == "get_forecast" else "weather"
-            sid = self._surface_id(conv, "picker")
-            return surfaces.picker_surface(
-                sid, result, then=then, units=units, days=int(req.args.get("days", 7))
-            )
-        if isinstance(result, CityWeather):
-            return surfaces.weather_surface(self._surface_id(conv, "weather"), result)
-        if isinstance(result, Forecast):
-            return surfaces.forecast_surface(self._surface_id(conv, "forecast"), result)
-        if isinstance(result, list):
-            return surfaces.world_clock_surface(self._surface_id(conv, "clock"), result)
-        raise TypeError(f"No designed surface for {type(result).__name__}")
-
     # ---- user actions (no LLM) -----------------------------------------------
 
     async def on_action(self, conv: str, action: dict[str, Any]) -> list[Part]:
@@ -146,26 +124,28 @@ class WeatherAgentExecutor(AgentExecutor):
         place_id = int(ctx["placeId"])
         units = Units(ctx.get("units", "metric"))
         days = int(ctx.get("days", 7))
+        result: CityWeather | Forecast | Resolution
         if name == "pick_place" and ctx.get("then") == "forecast":
-            f = await self.service.forecast(place_id=place_id, days=days, units=units)
-            assert isinstance(f, Forecast)
-            msgs = [
-                surfaces.update_components(sid, surfaces.forecast_layout()),
-                surfaces.update_data(sid, surfaces.forecast_data(f)),
-            ]
-            note = f"The user picked {f.place.label}. {f.summary}"
+            result = await self.service.forecast(
+                place_id=place_id, days=days, units=units
+            )
         elif name == "pick_place":
-            w = await self.service.city_weather(place_id=place_id, units=units)
-            assert isinstance(w, CityWeather)
-            msgs = surfaces.weather_surface(sid, w, create=False)
-            note = f"The user picked {w.place.label}. {w.summary}"
+            result = await self.service.city_weather(place_id=place_id, units=units)
         elif name == "set_forecast":
-            f = await self.service.forecast(place_id=place_id, days=days, units=units)
-            assert isinstance(f, Forecast)
-            msgs = surfaces.forecast_update(sid, f)
-            note = f"The user changed the forecast view. {f.summary}"
+            result = await self.service.forecast(
+                place_id=place_id, days=days, units=units
+            )
         else:
             return [Part(root=TextPart(text=f"Unknown action {name!r}."))]
+        assert isinstance(
+            result, CityWeather | Forecast
+        )  # a place id never is ambiguous
+        note = (
+            f"The user changed the forecast view. {result.summary}"
+            if name == "set_forecast"
+            else f"The user picked {result.place.label}. {result.summary}"
+        )
+        msgs = self.renderer.update(sid, UiRequest(str(name), result))
         self._ui_notes[conv].append(note)
         return _a2ui_parts(msgs)
 
@@ -196,7 +176,7 @@ class WeatherAgentExecutor(AgentExecutor):
         finally:
             UI_SINK.reset(token)
         text = result.get("summary") or result.get("error_message", "")
-        msgs = [m for req in sink for m in self.render(conv, req)]
+        msgs = [m for req in sink for m in self.renderer.render(conv, req)]
         return [*_a2ui_parts(msgs), Part(root=TextPart(text=text))]
 
     # ---- live (LLM) ----------------------------------------------------------
@@ -275,7 +255,7 @@ class WeatherAgentExecutor(AgentExecutor):
                         event.usage_metadata.candidates_token_count or 0
                     )
                 if sink:  # a tool returned: render its designed surface now
-                    msgs = [m for req in sink for m in self.render(conv, req)]
+                    msgs = [m for req in sink for m in self.renderer.render(conv, req)]
                     sink.clear()
                     await stream(_a2ui_parts(msgs))
                 if event.is_final_response() and event.content and event.content.parts:
