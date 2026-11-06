@@ -55,10 +55,10 @@ test("results table accumulates runs and exports CSV", async ({ page }) => {
   const file = await (await download).path();
   const { readFileSync } = await import("node:fs");
   const csv = readFileSync(file, "utf8").trim().split("\n");
-  expect(csv[0]).toContain("scenario,side,mode,networkBytes");
-  expect(csv.slice(1).map((r) => r.split(",").slice(0, 3).join(","))).toEqual([
-    "S1,mcp,scripted",
-    "S1,a2ui,scripted",
+  expect(csv[0]).toContain("scenario,side,transport,mode,networkBytes");
+  expect(csv.slice(1).map((r) => r.split(",").slice(0, 4).join(","))).toEqual([
+    "S1,mcp,mcp,scripted",
+    "S1,a2ui,a2a,scripted",
   ]);
 });
 

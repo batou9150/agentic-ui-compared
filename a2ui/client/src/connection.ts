@@ -33,11 +33,20 @@ export interface ConnectionHooks {
   onError?: (error: Error) => void;
 }
 
+/** What the chat needs from a transport (A2A here, AG-UI in agui-connection.ts). */
+export interface AgentConnection {
+  readonly processor: MessageProcessor;
+  ready(): Promise<void>;
+  sendText(text: string, metadata?: Record<string, unknown>): Promise<TurnResult>;
+  sendAction(action: ActionPayload): Promise<TurnResult>;
+  reset(): void;
+}
+
 const encoder = new TextEncoder();
 const byteLength = (value: unknown) =>
   encoder.encode(typeof value === "string" ? value : JSON.stringify(value)).length;
 
-export class A2uiAgentConnection {
+export class A2uiAgentConnection implements AgentConnection {
   readonly processor: MessageProcessor;
   private client?: Promise<A2AClient>;
   private contextId?: string;

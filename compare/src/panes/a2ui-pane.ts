@@ -1,6 +1,8 @@
-// Right pane: the A2UI chat (official Lit renderer) connected to the ADK agent.
+// Right pane: the A2UI chat (official Lit renderer) connected to the ADK agent,
+// over A2A (default) or AG-UI (?a2ui=agui, through the harness relay).
+import { AguiAgentConnection } from "@weather/a2ui-client/src/agui-connection";
 import "@weather/a2ui-client/src/chat";
-import type { WeatherA2uiChat } from "@weather/a2ui-client/src/chat";
+import type { Transport, WeatherA2uiChat } from "@weather/a2ui-client/src/chat";
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { MetricsCollector, byteLength } from "../metrics";
@@ -14,10 +16,11 @@ const RECORDED = import.meta.glob("../../../scenarios/recorded/*.json", {
 
 const A2UI_KINDS = new Set(["createSurface", "updateComponents", "updateDataModel", "deleteSurface"]);
 const DATA_KINDS = new Set(["updateComponents", "updateDataModel"]);
+const RUN_KINDS = new Set(["message/stream", "run"]); // an A2A stream or an AG-UI run
 
 @customElement("a2ui-pane")
 export class A2uiPane extends LitElement implements Pane {
-  @property({ attribute: false }) config!: { a2uiUrl: string };
+  @property({ attribute: false }) config!: { a2uiUrl: string; aguiUrl: string; transport: Transport };
   readonly metrics = new MetricsCollector("a2ui");
   protected createRenderRoot() {
     return this;
@@ -29,6 +32,7 @@ export class A2uiPane extends LitElement implements Pane {
 
   async connect(): Promise<void> {
     const chat = this.chat;
+    this.metrics.transport = this.config.transport;
     chat.hooks = {
       onProtocol: (e) => {
         const a2ui = A2UI_KINDS.has(e.kind);
@@ -40,7 +44,7 @@ export class A2uiPane extends LitElement implements Pane {
           kind: e.kind,
           payload: e.payload,
           bytes: e.bytes,
-          roundTrip: e.direction === "out" && e.kind === "message/stream",
+          roundTrip: e.direction === "out" && RUN_KINDS.has(e.kind),
         });
         this.dispatchEvent(new CustomEvent("log"));
       },
@@ -77,6 +81,7 @@ export class A2uiPane extends LitElement implements Pane {
 
   async runStep(step: Step, prompt: string, first: boolean): Promise<void> {
     if (step.kind === "click") return;
+    this.scriptedClicks(true);
     if (first) this.chat.note(prompt);
     const scripted =
       step.kind === "tool"
@@ -87,7 +92,14 @@ export class A2uiPane extends LitElement implements Pane {
   }
 
   async ask(prompt: string): Promise<void> {
+    this.scriptedClicks(false);
     await this.chat.ask(prompt);
+  }
+
+  /** Over AG-UI a click is an agent turn: in Scripted mode the replay model answers it. */
+  private scriptedClicks(on: boolean): void {
+    const agent = this.chat.agent;
+    if (agent instanceof AguiAgentConnection) agent.scriptedClicks = on;
   }
 
   setTheme(theme: Theme): void {
@@ -97,8 +109,10 @@ export class A2uiPane extends LitElement implements Pane {
   }
 
   render() {
+    const agui = this.config.transport === "agui";
     return html`<weather-a2ui-chat
-      agent-url=${this.config.a2uiUrl}
+      agent-url=${agui ? this.config.aguiUrl : this.config.a2uiUrl}
+      transport=${this.config.transport}
       hide-input
       data-testid="transcript-a2ui"
     ></weather-a2ui-chat>`;

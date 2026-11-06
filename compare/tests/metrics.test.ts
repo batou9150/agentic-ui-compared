@@ -63,7 +63,7 @@ describe("export", () => {
     const csv = toCsv([c.snapshot('S"1', "scripted")]);
     const [header, row] = csv.trim().split("\n");
     expect(header.split(",")[0]).toBe("scenario");
-    expect(row.startsWith('"S""1",mcp,scripted')).toBe(true);
+    expect(row.startsWith('"S""1",mcp,mcp,scripted')).toBe(true);
   });
 
   it("counts UTF-8 bytes", () => {

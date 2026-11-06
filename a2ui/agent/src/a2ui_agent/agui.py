@@ -247,16 +247,24 @@ def agui_tools(service: WeatherService, renderer: SurfaceRenderer) -> dict[str, 
 # ---- the model: Gemini (Live) or replay (Scripted), with usage per run --------
 
 
+# The replay model reports zero usage (and ADK logs no "missing usage" warning).
+NO_USAGE = types.GenerateContentResponseUsageMetadata(
+    prompt_token_count=0, candidates_token_count=0
+)
+
+
 def _text(text: str) -> LlmResponse:
     return LlmResponse(
-        content=types.Content(role="model", parts=[types.Part(text=text)])
+        content=types.Content(role="model", parts=[types.Part(text=text)]),
+        usage_metadata=NO_USAGE,
     )
 
 
 def _call(name: str, args: dict[str, Any]) -> LlmResponse:
     call = types.FunctionCall(name=name, args=args)
     return LlmResponse(
-        content=types.Content(role="model", parts=[types.Part(function_call=call)])
+        content=types.Content(role="model", parts=[types.Part(function_call=call)]),
+        usage_metadata=NO_USAGE,
     )
 
 

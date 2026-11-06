@@ -1,5 +1,7 @@
 // Per-run metrics, computed from the protocol log of one pane.
 export type Mode = "scripted" | "live";
+/** How the side talks to its backend: MCP, or A2UI over A2A or over AG-UI. */
+export type Transport = "mcp" | "a2a" | "agui";
 
 export interface LogEntry {
   at: number; // ms, performance.now()
@@ -14,6 +16,7 @@ export interface LogEntry {
 export interface RunMetrics {
   scenario: string;
   side: "mcp" | "a2ui";
+  transport: Transport;
   mode: Mode;
   networkBytes: number;
   uiBytes: number; // bytes that describe the UI: ui:// HTML + view data, or A2UI messages
@@ -34,11 +37,14 @@ export class MetricsCollector {
   private endedAt: number | null = null;
   private llm = { calls: 0, input: 0, output: 0, retries: 0 };
   private uiBytes = 0;
+  transport: Transport;
 
   constructor(
     readonly side: "mcp" | "a2ui",
     private readonly now: () => number = () => performance.now(),
-  ) {}
+  ) {
+    this.transport = side === "mcp" ? "mcp" : "a2a";
+  }
 
   start(): void {
     this.entries = [];
@@ -84,6 +90,7 @@ export class MetricsCollector {
     return {
       scenario,
       side: this.side,
+      transport: this.transport,
       mode,
       networkBytes: network.reduce((sum, e) => sum + e.bytes, 0),
       uiBytes: this.uiBytes,
@@ -103,6 +110,7 @@ export class MetricsCollector {
 export const METRIC_COLUMNS: (keyof RunMetrics)[] = [
   "scenario",
   "side",
+  "transport",
   "mode",
   "networkBytes",
   "uiBytes",
