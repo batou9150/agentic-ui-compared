@@ -24,6 +24,9 @@ from a2a.types import AgentCard, DataPart, Message, Part, TaskState, TextPart
 from a2a.utils import new_agent_parts_message, new_task
 from a2ui.a2a.extension import try_activate_a2ui_extension
 from a2ui.a2a.parts import create_a2ui_part
+from a2ui.parser.messages import to_message_dicts
+from a2ui.parser.response_part import A2uiPart
+from a2ui.parser.response_part import TextPart as A2uiTextPart
 from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
@@ -38,8 +41,8 @@ from weather_core import (
 )
 
 from . import surfaces
-from .agent import a2ui_format, build_agent
-from .catalog import A2UI_VERSION, weather_catalog
+from .agent import a2ui_parser, build_agent
+from .catalog import A2UI_VERSION, validate
 from .tools import UI_SINK, UiRequest, make_tools
 
 logger = logging.getLogger(__name__)
@@ -172,7 +175,7 @@ class WeatherAgentExecutor(AgentExecutor):
         if "compose" in step:  # replay a layout recorded from a Live run
             recorded = step["compose"]
             try:
-                weather_catalog().validate(recorded["messages"])
+                validate(recorded["messages"])
             except Exception as exc:
                 return [
                     Part(root=TextPart(text=f"The recorded layout is invalid: {exc}"))
@@ -283,29 +286,22 @@ class WeatherAgentExecutor(AgentExecutor):
 
     def _parse_composed(self, text: str) -> tuple[list[Part], list[str]]:
         """Split the model's reply into text and (validated) composed A2UI."""
-        parser = a2ui_format().parser
+        parser = a2ui_parser()
         if not parser.has_format_content(text, complete=True):
             return [Part(root=TextPart(text=text))] if text.strip() else [], []
-        parts: list[Part] = []
-        errors: list[str] = []
         try:
+            # Parses and validates every block against the weather catalog,
+            # all or nothing.
             response_parts = parser.parse_response(text)
-        except Exception as exc:  # malformed JSON or schema error from the parser
+        except Exception as exc:  # malformed JSON or a layout the client rejects
             return [], [str(exc)]
+        parts: list[Part] = []
         for rp in response_parts:
-            if rp.text and rp.text.strip():
+            if isinstance(rp, A2uiTextPart) and rp.text.strip():
                 parts.append(Part(root=TextPart(text=rp.text)))
-            if rp.a2ui_json:
-                msgs = (
-                    rp.a2ui_json if isinstance(rp.a2ui_json, list) else [rp.a2ui_json]
-                )
-                try:
-                    weather_catalog().validate(msgs)
-                except Exception as exc:
-                    errors.append(str(exc))
-                    continue
-                parts += _a2ui_parts(msgs)
-        return parts, errors
+            elif isinstance(rp, A2uiPart):
+                parts += _a2ui_parts(to_message_dicts(rp.a2ui))
+        return parts, []
 
 
 def _a2ui_parts(messages: list[dict[str, Any]]) -> list[Part]:

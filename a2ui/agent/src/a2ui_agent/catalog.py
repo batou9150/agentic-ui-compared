@@ -7,14 +7,16 @@ LLM prompt and for validation.
 """
 
 import copy
-import json
+from collections.abc import Iterable
 from functools import cache
-from importlib import resources
 from typing import Any, Literal
 
 from a2ui.builder.v0_9 import ComponentBuilderNode
-from a2ui.schema.catalog import A2uiCatalog, CatalogConfig
-from a2ui.schema.catalog_provider import A2uiCatalogProvider
+from a2ui.catalog_transformers.pruning import ComponentPruningTransformer
+from a2ui.core import CatalogApi
+from a2ui.core.basic_catalog import BasicCatalog
+from a2ui.processor import CatalogConfig, InMemoryCatalogProvider
+from a2ui.utils.renderer_state import validate_payload
 
 A2UI_VERSION = "0.9.1"
 MESSAGE_VERSION = "v0.9.1"
@@ -91,8 +93,7 @@ CLOCK = _component(
 
 @cache
 def weather_catalog_schema() -> dict[str, Any]:
-    basic_path = resources.files("a2ui.assets") / A2UI_VERSION / "catalog.json"
-    schema: dict[str, Any] = copy.deepcopy(json.loads(basic_path.read_text()))
+    schema: dict[str, Any] = copy.deepcopy(BasicCatalog(A2UI_VERSION).to_json())
     schema["$id"] = WEATHER_CATALOG_ID
     schema["catalogId"] = WEATHER_CATALOG_ID
     schema["title"] = "Weather catalog (A2UI basic + Chart + Clock)"
@@ -106,18 +107,27 @@ def weather_catalog_schema() -> dict[str, Any]:
     return schema
 
 
-class _WeatherCatalogProvider(A2uiCatalogProvider):
-    def load(self) -> dict[str, Any]:
-        return copy.deepcopy(weather_catalog_schema())
-
-
-def catalog_config() -> CatalogConfig:
-    return CatalogConfig(name="weather", provider=_WeatherCatalogProvider())
-
-
 @cache
-def weather_catalog() -> A2uiCatalog:
-    return A2uiCatalog.from_config(catalog_config(), version=A2UI_VERSION)
+def weather_catalog() -> CatalogApi:
+    """The full catalog: what the client renders, used to validate surfaces."""
+    return InMemoryCatalogProvider(
+        weather_catalog_schema(),
+        protocol_version=A2UI_VERSION,
+        catalog_id=WEATHER_CATALOG_ID,
+    ).load()
+
+
+def catalog_config(components: Iterable[str] | None = None) -> CatalogConfig:
+    """The catalog given to the model, optionally pruned to some components."""
+    transformers = (
+        [ComponentPruningTransformer(list(components))] if components else None
+    )
+    return CatalogConfig(catalog=weather_catalog(), transformers=transformers)
+
+
+def validate(messages: list[dict[str, Any]]) -> None:
+    """Raise if a renderer holding the weather catalog would reject the messages."""
+    validate_payload([weather_catalog()], messages)
 
 
 # ---- builder nodes for the two custom components ---------------------------

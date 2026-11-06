@@ -4,11 +4,12 @@ import os
 from functools import cache
 
 from a2ui.inference_formats.direct_json.format import DirectJsonFormat
+from a2ui.inference_formats.direct_json.parser import DirectJsonParser
 from google.adk.agents import LlmAgent
 from google.adk.models import BaseLlm, Gemini
 from google.genai import types
 
-from .catalog import A2UI_VERSION, WEATHER_CATALOG_ID, catalog_config
+from .catalog import WEATHER_CATALOG_ID, catalog_config, weather_catalog
 from .surfaces import ATTRIBUTION_TEXT
 from .tools import Tool
 
@@ -47,16 +48,19 @@ UI rules:
 
 @cache
 def a2ui_format() -> DirectJsonFormat:
-    return DirectJsonFormat(version=A2UI_VERSION, catalogs=[catalog_config()])
+    """The format the model writes in: only the components it may compose with."""
+    pruned = catalog_config(COMPOSE_COMPONENTS).transformed_catalog
+    return DirectJsonFormat(catalogs=[pruned], allowed_messages=COMPOSE_MESSAGES)
+
+
+@cache
+def a2ui_parser() -> DirectJsonParser:
+    """Reads composed layouts and checks them against the full weather catalog."""
+    return DirectJsonFormat(catalogs=[weather_catalog()]).create_parser()
 
 
 def instruction() -> str:
-    return a2ui_format().prompt_generator.generate(
-        role_description=ROLE,
-        include_schema=True,
-        allowed_components=COMPOSE_COMPONENTS,
-        allowed_messages=COMPOSE_MESSAGES,
-    )
+    return f"{ROLE}\n\n{a2ui_format().prompt_generator.generate()}"
 
 
 def model_name() -> str:

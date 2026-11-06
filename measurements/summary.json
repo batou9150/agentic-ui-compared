@@ -1,16 +1,16 @@
 {
   "environment": {
-    "date": "2026-10-04",
+    "date": "2026-11-06",
     "mode": "scripted",
     "runs": 10,
     "platform": "Darwin arm64",
     "node": "v25.4.0",
-    "python": "3.13.7"
+    "python": "3.14.8"
   },
   "loc": {
     "MCP Apps": {
       "UI (ui:// views, TS + CSS + HTML)": {
-        "loc": 665,
+        "loc": 679,
         "files": [
           "mcp-apps/views/build.mjs",
           "mcp-apps/views/current.html",
@@ -33,11 +33,11 @@
           "mcp-apps/server/src/mcp_apps_server/server.py"
         ]
       },
-      "total": 880
+      "total": 894
     },
     "A2UI": {
       "UI (surface builders, catalog: Python + TS custom components)": {
-        "loc": 535,
+        "loc": 545,
         "files": [
           "a2ui/agent/src/a2ui_agent/catalog.py",
           "a2ui/agent/src/a2ui_agent/surfaces.py",
@@ -45,7 +45,7 @@
         ]
       },
       "Agent (tools, prompt, executor, A2A server)": {
-        "loc": 554,
+        "loc": 558,
         "files": [
           "a2ui/agent/src/a2ui_agent/__main__.py",
           "a2ui/agent/src/a2ui_agent/agent.py",
@@ -63,7 +63,7 @@
           "a2ui/client/src/main.ts"
         ]
       },
-      "total": 1374
+      "total": 1388
     },
     "Harness only (not product code)": {
       "Minimal MCP Apps host (what a real host provides)": {
@@ -81,49 +81,50 @@
   "artifacts": {
     "mcp_apps_views": {
       "current.html": {
-        "raw": 239670,
-        "gzip": 62198
+        "raw": 240125,
+        "gzip": 62376
       },
       "forecast.html": {
-        "raw": 411553,
-        "gzip": 120801
+        "raw": 412035,
+        "gzip": 120989
       },
       "world-clock.html": {
-        "raw": 239227,
-        "gzip": 62081
+        "raw": 239748,
+        "gzip": 62287
       }
     },
     "a2ui_client_bundle": {
-      "raw": 803694,
-      "gzip": 235331
+      "raw": 807033,
+      "gzip": 236713
     },
-    "a2ui_system_prompt_chars": 28443
+    "a2ui_system_prompt_chars": 28608
   },
   "scenarios": {
     "S1": {
       "mcp": {
         "n": 10,
-        "networkBytes": 242238.0,
-        "uiBytes": 240583.0,
+        "networkBytes": 242693.0,
+        "uiBytes": 241038.0,
         "bridgeMessages": 7.0,
         "bridgeMessages_range": [
           7,
           8
         ],
         "roundTrips": 2.0,
-        "firstRenderMs": 59.05,
+        "firstRenderMs": 58.849999999999994,
         "firstRenderMs_p10_p90": [
-          57.39,
-          70.05000000000001
+          56.910000000000004,
+          76.69
         ],
-        "totalMs": 33.85,
+        "totalMs": 35.3,
         "totalMs_p10_p90": [
-          31.929999999999996,
-          38.89
+          33.55,
+          41.91
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       },
       "a2ui": {
         "n": 10,
@@ -131,41 +132,43 @@
         "uiBytes": 1837.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 2.8499999999999996,
+        "firstRenderMs": 3.45,
         "firstRenderMs_p10_p90": [
-          2.5100000000000002,
-          3.6
+          2.94,
+          5.26
         ],
-        "totalMs": 4.0,
+        "totalMs": 4.75,
         "totalMs_p10_p90": [
-          3.71,
-          5.7299999999999995
+          4.41,
+          6.49
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       }
     },
     "S2": {
       "mcp": {
         "n": 10,
-        "networkBytes": 244314.0,
-        "uiBytes": 242071.0,
+        "networkBytes": 244769.0,
+        "uiBytes": 242526.0,
         "bridgeMessages": 12.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 57.650000000000006,
+        "firstRenderMs": 72.80000000000001,
         "firstRenderMs_p10_p90": [
-          54.64,
-          59.05
+          56.980000000000004,
+          77.78999999999999
         ],
-        "totalMs": 33.849999999999994,
+        "totalMs": 38.1,
         "totalMs_p10_p90": [
-          32.2,
-          35.86
+          34.77,
+          53.7
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       },
       "a2ui": {
         "n": 10,
@@ -173,41 +176,43 @@
         "uiBytes": 4141.0,
         "bridgeMessages": 0.0,
         "roundTrips": 2.0,
-        "firstRenderMs": 2.95,
+        "firstRenderMs": 3.65,
         "firstRenderMs_p10_p90": [
-          2.4099999999999997,
-          3.3699999999999997
+          2.73,
+          10.370000000000001
         ],
-        "totalMs": 4.2,
+        "totalMs": 5.15,
         "totalMs_p10_p90": [
-          3.7000000000000006,
-          4.680000000000001
+          4.119999999999999,
+          14.8
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       }
     },
     "S3": {
       "mcp": {
         "n": 10,
-        "networkBytes": 430967.0,
-        "uiBytes": 425604.0,
+        "networkBytes": 431451.0,
+        "uiBytes": 426086.0,
         "bridgeMessages": 15.0,
         "roundTrips": 4.0,
-        "firstRenderMs": 87.1,
+        "firstRenderMs": 88.69999999999999,
         "firstRenderMs_p10_p90": [
-          70.15,
-          91.04
+          83.75,
+          132.67000000000002
         ],
-        "totalMs": 47.45,
+        "totalMs": 52.1,
         "totalMs_p10_p90": [
-          45.85,
-          56.23
+          49.510000000000005,
+          90.53
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       },
       "a2ui": {
         "n": 10,
@@ -215,41 +220,43 @@
         "uiBytes": 4718.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 3.25,
+        "firstRenderMs": 4.55,
         "firstRenderMs_p10_p90": [
-          2.9099999999999997,
-          5.1
+          3.22,
+          11.620000000000001
         ],
-        "totalMs": 9.05,
+        "totalMs": 9.8,
         "totalMs_p10_p90": [
-          7.63,
-          10.15
+          8.430000000000001,
+          23.18
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       }
     },
     "S4": {
       "mcp": {
         "n": 10,
-        "networkBytes": 243635.0,
-        "uiBytes": 241725.0,
+        "networkBytes": 244156.0,
+        "uiBytes": 242246.0,
         "bridgeMessages": 6.0,
         "roundTrips": 2.0,
-        "firstRenderMs": 70.05,
+        "firstRenderMs": 64.5,
         "firstRenderMs_p10_p90": [
-          55.8,
-          71.63000000000001
+          57.21,
+          76.3
         ],
-        "totalMs": 36.7,
+        "totalMs": 37.5,
         "totalMs_p10_p90": [
-          33.92999999999999,
-          39.29
+          34.989999999999995,
+          41.93
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       },
       "a2ui": {
         "n": 10,
@@ -257,61 +264,64 @@
         "uiBytes": 2838.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 3.7,
+        "firstRenderMs": 3.3499999999999996,
         "firstRenderMs_p10_p90": [
-          3.3,
-          6.209999999999999
+          2.92,
+          3.87
         ],
-        "totalMs": 7.6,
+        "totalMs": 4.9,
         "totalMs_p10_p90": [
-          4.720000000000001,
-          8.98
+          4.529999999999999,
+          8.499999999999998
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       }
     },
     "S5": {
       "mcp": {
         "n": 10,
-        "networkBytes": 420140.0,
-        "uiBytes": 417119.0,
+        "networkBytes": 420624.0,
+        "uiBytes": 417601.0,
         "bridgeMessages": 12.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 94.75,
+        "firstRenderMs": 103.69999999999999,
         "firstRenderMs_p10_p90": [
-          87.99,
-          107.25999999999999
+          94.22999999999999,
+          110.84
         ],
-        "totalMs": 102.75,
+        "totalMs": 110.65,
         "totalMs_p10_p90": [
-          99.1,
-          106.13
+          102.2,
+          126.95
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       },
       "a2ui": {
         "n": 10,
-        "networkBytes": 9063.0,
-        "uiBytes": 1151.0,
+        "networkBytes": 9510.0,
+        "uiBytes": 1109.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 3.5999999999999996,
+        "firstRenderMs": 5.4,
         "firstRenderMs_p10_p90": [
-          2.3999999999999995,
-          4.69
+          3.1100000000000003,
+          7.449999999999998
         ],
-        "totalMs": 37.25,
+        "totalMs": 26.45,
         "totalMs_p10_p90": [
-          29.339999999999996,
-          69.83000000000001
+          21.020000000000003,
+          27.71
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
-        "outputTokens": 0.0
+        "outputTokens": 0.0,
+        "composeRetries": 0.0
       }
     }
   }

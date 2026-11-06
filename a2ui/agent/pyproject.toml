@@ -7,10 +7,11 @@ authors = [{ name = "Baptiste PIRAULT" }]
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "weather-core",
-    "google-adk==2.11.0",
-    "google-genai==2.28.0",
-    "a2ui-agent-sdk==0.7.0",
-    "a2ui-core==0.2.0",
+    "google-adk==2.13.0",
+    "google-genai==2.34.0",
+    "a2ui-agent-sdk==0.10.0",
+    "a2ui-core==0.5.0",
+    "a2ui-a2a==0.2.0",
     "a2a-sdk[http-server]==0.3.26",
     "uvicorn==0.54.0",
     "starlette==1.7.0",
