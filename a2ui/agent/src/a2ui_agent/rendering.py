@@ -15,16 +15,29 @@ from .tools import UiRequest
 class SurfaceRenderer:
     def __init__(self) -> None:
         self._counts: dict[str, int] = defaultdict(int)
+        self._issued: dict[str, set[str]] = defaultdict(set)
 
     def surface_id(self, conv: str, kind: str) -> str:
         self._counts[conv] += 1
-        return f"{kind}-{self._counts[conv]}"
+        sid = f"{kind}-{self._counts[conv]}"
+        self._issued[conv].add(sid)
+        return sid
 
     def render(
         self, conv: str, req: UiRequest, surface_id: str | None = None
     ) -> list[surfaces.Message]:
-        """A new surface for the result, or an update of `surface_id` in place."""
-        if surface_id:
+        """A new surface for the result, or an update of `surface_id` in place.
+
+        `surface_id` comes from the model on the AG-UI path, so it is honored
+        only for a surface this conversation was given and a result that can
+        redraw it; anything else gets a new surface.
+        """
+        if (
+            surface_id in self._issued[conv]
+            and isinstance(req.result, CityWeather | Forecast)
+            and not (surface_id or "").startswith("clock-")
+        ):
+            assert surface_id is not None
             return self.update(surface_id, req)
         result, units = req.result, Units(req.args.get("units", "metric"))
         if isinstance(result, Resolution):
