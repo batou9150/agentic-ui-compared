@@ -64,6 +64,7 @@ LOC_GROUPS: dict[str, dict[str, list[str]]] = {
         "Agent (tools, prompt, executor, A2A server)": [
             "a2ui/agent/src/a2ui_agent/agent.py",
             "a2ui/agent/src/a2ui_agent/tools.py",
+            "a2ui/agent/src/a2ui_agent/rendering.py",
             "a2ui/agent/src/a2ui_agent/executor.py",
             "a2ui/agent/src/a2ui_agent/server.py",
             "a2ui/agent/src/a2ui_agent/__main__.py",
@@ -74,6 +75,13 @@ LOC_GROUPS: dict[str, dict[str, list[str]]] = {
             "a2ui/client/src/main.ts",
             "a2ui/client/index.html",
         ],
+    },
+    "A2UI over AG-UI (added to the A2UI side, same agent and renderer)": {
+        "Agent (AG-UI endpoint, tool envelopes, click shim, replay model)": [
+            "a2ui/agent/src/a2ui_agent/agui.py",
+        ],
+        "Client (AG-UI connection)": ["a2ui/client/src/agui-connection.ts"],
+        "Relay (Node hop running @ag-ui/a2ui-middleware)": ["compare/server/agui.ts"],
     },
     "Harness only (not product code)": {
         "Minimal MCP Apps host (what a real host provides)": [
@@ -127,39 +135,70 @@ def run(cmd: list[str], cwd: Path = ROOT, env: dict[str, str] | None = None) -> 
 
 def artifact_report() -> dict[str, Any]:
     run(["npm", "run", "build", "-w", "mcp-apps/views", "-w", "a2ui/client"])
+    run(["npx", "vite", "build", "-c", "vite.agui.config.ts"], cwd=ROOT / "a2ui/client")
+    agui = [size(p) for p in (ROOT / "a2ui/client/dist-agui").glob("*.js")]
     views = {
         p.name: size(p) for p in sorted((ROOT / "mcp-apps/views/dist").glob("*.html"))
     }
     bundles = [size(p) for p in (ROOT / "a2ui/client/dist/assets").glob("*.js")]
-    prompt = subprocess.run(
+    prompts = subprocess.run(
         [
             "uv",
             "run",
             "python",
             "-c",
-            "from a2ui_agent.agent import instruction; print(len(instruction()))",
+            "from a2ui_agent.agent import agui_instruction, instruction;"
+            " print(len(instruction()), len(agui_instruction()))",
         ],
         cwd=ROOT,
         check=True,
         capture_output=True,
         text=True,
-    ).stdout.strip()
+    ).stdout.split()
     return {
         "mcp_apps_views": views,
         "a2ui_client_bundle": {
             "raw": sum(b["raw"] for b in bundles),
             "gzip": sum(b["gzip"] for b in bundles),
         },
-        "a2ui_system_prompt_chars": int(prompt),
+        "a2ui_agui_client_addon": {
+            "raw": sum(b["raw"] for b in agui),
+            "gzip": sum(b["gzip"] for b in agui),
+        },
+        "a2ui_system_prompt_chars": int(prompts[0]),
+        "a2ui_agui_system_prompt_chars": int(prompts[1]),
     }
 
 
 def browser_runs(mode: str, runs: int) -> None:
-    run(
-        ["npx", "playwright", "test", "-c", "measure/playwright.config.ts"],
-        cwd=ROOT / "scenarios",
-        env={"MEASURE_RUNS": str(runs), "MEASURE_MODE": mode, "MEASURE_OUT": str(RAW)},
-    )
+    """Both panes (A2UI over A2A), then the A2UI pane alone over AG-UI."""
+    for transport in ("a2a", "agui"):
+        run(
+            ["npx", "playwright", "test", "-c", "measure/playwright.config.ts"],
+            cwd=ROOT / "scenarios",
+            env={
+                "MEASURE_RUNS": str(runs),
+                "MEASURE_MODE": mode,
+                "MEASURE_OUT": str(RAW),
+                "MEASURE_A2UI_TRANSPORT": transport,
+            },
+        )
+
+
+def raw_rows(mode: str) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = json.loads((RAW / f"runs-{mode}.json").read_text())
+    agui = RAW / f"runs-{mode}-agui.json"
+    if agui.exists():
+        rows += json.loads(agui.read_text())
+    return rows
+
+
+def row_key(row: dict[str, Any]) -> str:
+    """mcp, a2ui (over A2A) or a2ui-agui; runs recorded before transports are A2A."""
+    return "a2ui-agui" if row.get("transport") == "agui" else row["side"]
+
+
+LABELS = {"mcp": "MCP Apps", "a2ui": "A2UI over A2A", "a2ui-agui": "A2UI over AG-UI"}
 
 
 NUMERIC = [
@@ -177,33 +216,31 @@ NUMERIC = [
 
 
 def aggregate(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    by_scenario: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    by_key: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
-        by_scenario[row["scenario"]].append(row)
+        by_key[(row["scenario"], row_key(row))].append(row)
     result: dict[str, dict[str, Any]] = {}
-    for scenario, scenario_rows in by_scenario.items():
-        measured = scenario_rows[2:]  # the first pair (mcp, a2ui) is the warm-up run
-        for side in ("mcp", "a2ui"):
-            side_rows = [r for r in measured if r["side"] == side]
-            stats: dict[str, Any] = {"n": len(side_rows)}
-            for key in NUMERIC:
-                values = [r[key] for r in side_rows if r.get(key) is not None]
-                if not values:
-                    stats[key] = None
-                    continue
-                stats[key] = statistics.median(values)
-                if key in ("firstRenderMs", "totalMs"):
-                    stats[f"{key}_p10_p90"] = (
-                        statistics.quantiles(values, n=10)[0]
-                        if len(values) > 1
-                        else values[0],
-                        statistics.quantiles(values, n=10)[-1]
-                        if len(values) > 1
-                        else values[0],
-                    )
-                elif min(values) != max(values):
-                    stats[f"{key}_range"] = (min(values), max(values))
-            result.setdefault(scenario, {})[side] = stats
+    for (scenario, side), all_rows in by_key.items():
+        side_rows = all_rows[1:]  # the first run of each side is the warm-up
+        stats: dict[str, Any] = {"n": len(side_rows)}
+        for key in NUMERIC:
+            values = [r[key] for r in side_rows if r.get(key) is not None]
+            if not values:
+                stats[key] = None
+                continue
+            stats[key] = statistics.median(values)
+            if key in ("firstRenderMs", "totalMs"):
+                stats[f"{key}_p10_p90"] = (
+                    statistics.quantiles(values, n=10, method="inclusive")[0]
+                    if len(values) > 1
+                    else values[0],
+                    statistics.quantiles(values, n=10, method="inclusive")[-1]
+                    if len(values) > 1
+                    else values[0],
+                )
+            elif min(values) != max(values):
+                stats[f"{key}_range"] = (min(values), max(values))
+        result.setdefault(scenario, {})[side] = stats
     return result
 
 
@@ -255,9 +292,18 @@ def markdown(summary: dict[str, Any]) -> str:
         lines.append(
             f"| A2UI client bundle (renderer + catalog + A2A client, loaded once) | {kb(b['raw'])} | {kb(b['gzip'])} |"
         )
+        a = art.get("a2ui_agui_client_addon")
+        if a:
+            lines.append(
+                f"| AG-UI client add-on (AG-UI connection + @ag-ui/client, on top of the A2UI client) | {kb(a['raw'])} | {kb(a['gzip'])} |"
+            )
         lines.append(
             f"| A2UI system prompt with the catalog schema (Live mode, every LLM call) | {art['a2ui_system_prompt_chars']:,} chars | |"
         )
+        if art.get("a2ui_agui_system_prompt_chars"):
+            lines.append(
+                f"| Same, AG-UI variant (compose_ui and UI action rules, no reply-format rules) | {art['a2ui_agui_system_prompt_chars']:,} chars | |"
+            )
     lines += [
         "",
         "**Per scenario** (network = bytes on the wire between UI and backend, JSON bodies; "
@@ -269,7 +315,7 @@ def markdown(summary: dict[str, Any]) -> str:
     ]
     for scenario, sides in summary["scenarios"].items():
         for side, s in sides.items():
-            label = "MCP Apps" if side == "mcp" else "A2UI"
+            label = LABELS[side]
             p = s.get("firstRenderMs_p10_p90")
             spread = f" ({p[0]:.0f}-{p[1]:.0f})" if p else ""
             lines.append(
@@ -284,7 +330,7 @@ def markdown(summary: dict[str, Any]) -> str:
         ]
         for scenario, sides in summary["scenarios"].items():
             for side, s in sides.items():
-                label = "MCP Apps" if side == "mcp" else "A2UI"
+                label = LABELS[side]
                 retries = s.get(
                     "composeRetries"
                 )  # absent from runs before it was recorded
@@ -318,7 +364,7 @@ def main() -> None:
 
     if not args.reuse:
         browser_runs(args.mode, args.runs)
-    rows = json.loads((RAW / f"runs-{args.mode}.json").read_text())
+    rows = raw_rows(args.mode)
     summary = {
         "environment": {
             "date": datetime.now(UTC).date().isoformat(),

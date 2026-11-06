@@ -24,3 +24,4 @@ blob-report/
 .DS_Store
 measurements/raw/
 .playwright-mcp/
+dist-agui/

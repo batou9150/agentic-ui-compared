@@ -29,6 +29,7 @@ export class AguiAgentConnection implements AgentConnection {
   private agent: HttpAgent;
   private busy: Promise<unknown> = Promise.resolve();
   private seen = new Set<string>(); // activity snapshots already applied
+  private generation = 0; // bumped by reset(): events of older runs are ignored
 
   constructor(
     private readonly url: string,
@@ -78,7 +79,12 @@ export class AguiAgentConnection implements AgentConnection {
     });
   }
 
+  async idle(): Promise<void> {
+    await this.busy;
+  }
+
   reset(): void {
+    this.generation++;
     this.agent = this.newAgent();
     this.seen.clear();
     for (const id of [...this.processor.getSurfaces().keys()]) {
@@ -95,12 +101,14 @@ export class AguiAgentConnection implements AgentConnection {
 
   private async run(forwardedProps: Record<string, unknown>): Promise<TurnResult> {
     const result: TurnResult = { text: [], metadata: undefined };
+    const generation = this.generation;
     let text = "";
     try {
       await this.agent.runAgent(
         { forwardedProps },
         {
           onEvent: ({ event }) => {
+            if (generation !== this.generation) return; // a run from before reset()
             this.emit("in", `agui:${event.type}`, event, byteLength(event));
             switch (event.type) {
               case EventType.ACTIVITY_SNAPSHOT:

@@ -1,8 +1,9 @@
 // Right pane: the A2UI chat (official Lit renderer) connected to the ADK agent,
 // over A2A (default) or AG-UI (?a2ui=agui, through the harness relay).
 import { AguiAgentConnection } from "@weather/a2ui-client/src/agui-connection";
-import "@weather/a2ui-client/src/chat";
-import type { Transport, WeatherA2uiChat } from "@weather/a2ui-client/src/chat";
+import { WeatherA2uiChat, type Transport } from "@weather/a2ui-client/src/chat";
+
+WeatherA2uiChat.transports.agui = AguiAgentConnection;
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { MetricsCollector, byteLength } from "../metrics";

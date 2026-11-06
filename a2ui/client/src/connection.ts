@@ -39,6 +39,8 @@ export interface AgentConnection {
   ready(): Promise<void>;
   sendText(text: string, metadata?: Record<string, unknown>): Promise<TurnResult>;
   sendAction(action: ActionPayload): Promise<TurnResult>;
+  /** Resolves when no turn is in flight (a click's turn included). */
+  idle(): Promise<void>;
   reset(): void;
 }
 
@@ -88,6 +90,10 @@ export class A2uiAgentConnection implements AgentConnection {
     const data = { version: MESSAGE_VERSION, action };
     this.emit("out", "action", data);
     return this.send([{ kind: "data", data, metadata: { mimeType: A2UI_MIME_TYPE } } as Part]);
+  }
+
+  async idle(): Promise<void> {
+    await this.busy;
   }
 
   reset(): void {
