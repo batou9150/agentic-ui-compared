@@ -1,11 +1,11 @@
 {
   "environment": {
-    "date": "2026-10-05",
+    "date": "2026-11-06",
     "mode": "live",
     "runs": 3,
     "platform": "Darwin arm64",
     "node": "v25.4.0",
-    "python": "3.13.7"
+    "python": "3.14.8"
   },
   "loc": {
     "MCP Apps": {
@@ -37,7 +37,7 @@
     },
     "A2UI": {
       "UI (surface builders, catalog: Python + TS custom components)": {
-        "loc": 535,
+        "loc": 545,
         "files": [
           "a2ui/agent/src/a2ui_agent/catalog.py",
           "a2ui/agent/src/a2ui_agent/surfaces.py",
@@ -45,17 +45,18 @@
         ]
       },
       "Agent (tools, prompt, executor, A2A server)": {
-        "loc": 562,
+        "loc": 634,
         "files": [
           "a2ui/agent/src/a2ui_agent/__main__.py",
           "a2ui/agent/src/a2ui_agent/agent.py",
           "a2ui/agent/src/a2ui_agent/executor.py",
+          "a2ui/agent/src/a2ui_agent/rendering.py",
           "a2ui/agent/src/a2ui_agent/server.py",
           "a2ui/agent/src/a2ui_agent/tools.py"
         ]
       },
       "Client app (A2A connection, chat shell)": {
-        "loc": 285,
+        "loc": 309,
         "files": [
           "a2ui/client/index.html",
           "a2ui/client/src/chat.ts",
@@ -63,7 +64,28 @@
           "a2ui/client/src/main.ts"
         ]
       },
-      "total": 1382
+      "total": 1488
+    },
+    "A2UI over AG-UI (added to the A2UI side, same agent and renderer)": {
+      "Agent (AG-UI endpoint, tool envelopes, click shim, replay model)": {
+        "loc": 303,
+        "files": [
+          "a2ui/agent/src/a2ui_agent/agui.py"
+        ]
+      },
+      "Client (AG-UI connection)": {
+        "loc": 137,
+        "files": [
+          "a2ui/client/src/agui-connection.ts"
+        ]
+      },
+      "Relay (Node hop running @ag-ui/a2ui-middleware)": {
+        "loc": 73,
+        "files": [
+          "compare/server/agui.ts"
+        ]
+      },
+      "total": 513
     },
     "Harness only (not product code)": {
       "Minimal MCP Apps host (what a real host provides)": {
@@ -81,141 +103,212 @@
   "artifacts": {
     "mcp_apps_views": {
       "current.html": {
-        "raw": 239670,
-        "gzip": 62198
+        "raw": 240125,
+        "gzip": 62376
       },
       "forecast.html": {
-        "raw": 411674,
-        "gzip": 120828
+        "raw": 412035,
+        "gzip": 120989
       },
       "world-clock.html": {
-        "raw": 239293,
-        "gzip": 62110
+        "raw": 239748,
+        "gzip": 62287
       }
     },
     "a2ui_client_bundle": {
-      "raw": 803694,
-      "gzip": 235331
+      "raw": 807294,
+      "gzip": 237838
     },
-    "a2ui_system_prompt_chars": 28443
+    "a2ui_agui_client_addon": {
+      "raw": 340897,
+      "gzip": 77951
+    },
+    "a2ui_system_prompt_chars": 28608,
+    "a2ui_agui_system_prompt_chars": 28342
   },
   "scenarios": {
     "S1": {
       "mcp": {
         "n": 3,
-        "networkBytes": 242232,
-        "uiBytes": 240576,
-        "bridgeMessages": 7,
-        "bridgeMessages_range": [
-          7,
-          8
-        ],
+        "networkBytes": 242653,
+        "uiBytes": 241009,
+        "bridgeMessages": 8,
         "roundTrips": 2,
-        "firstRenderMs": 1138.4,
+        "firstRenderMs": 2438.1,
         "firstRenderMs_p10_p90": [
-          861.9200000000001,
-          2076.16
+          2427.0600000000004,
+          3161.62
         ],
-        "totalMs": 2821.4,
+        "totalMs": 5102.5,
         "totalMs_p10_p90": [
-          1635.0,
-          3455.0
+          4397.9400000000005,
+          5255.9400000000005
         ],
         "llmCalls": 2,
-        "inputTokens": 1681,
+        "inputTokens": 1682,
         "inputTokens_range": [
-          1673,
-          1690
+          1682,
+          1689
         ],
         "outputTokens": 27,
         "composeRetries": 0
       },
       "a2ui": {
         "n": 3,
-        "networkBytes": 3638,
-        "uiBytes": 1838,
+        "networkBytes": 3627,
+        "uiBytes": 1827,
         "bridgeMessages": 0,
         "roundTrips": 1,
-        "firstRenderMs": 1921,
+        "firstRenderMs": 3107.7,
         "firstRenderMs_p10_p90": [
-          1830.28,
-          2165.0
+          3020.2599999999998,
+          3707.38
         ],
-        "totalMs": 2875.4,
+        "totalMs": 5560.2,
         "totalMs_p10_p90": [
-          2700.2,
-          3130.2799999999997
+          5449.320000000001,
+          8218.6
         ],
         "llmCalls": 2,
-        "inputTokens": 16689,
+        "inputTokens": 16759,
         "inputTokens_range": [
-          16684,
-          16692
+          16692,
+          16778
         ],
         "outputTokens": 27,
+        "composeRetries": 0
+      },
+      "a2ui-agui": {
+        "n": 3,
+        "networkBytes": 6947,
+        "networkBytes_range": [
+          6775,
+          6981
+        ],
+        "uiBytes": 1827,
+        "bridgeMessages": 0,
+        "roundTrips": 1,
+        "firstRenderMs": 2330.8,
+        "firstRenderMs_p10_p90": [
+          2303.44,
+          3729.44
+        ],
+        "totalMs": 4793.2,
+        "totalMs_p10_p90": [
+          4548.64,
+          5659.04
+        ],
+        "llmCalls": 2,
+        "inputTokens": 17958,
+        "inputTokens_range": [
+          17932,
+          17967
+        ],
+        "outputTokens": 27,
+        "outputTokens_range": [
+          24,
+          27
+        ],
         "composeRetries": 0
       }
     },
     "S2": {
       "mcp": {
         "n": 3,
-        "networkBytes": 244319,
-        "uiBytes": 242079,
-        "bridgeMessages": 12,
-        "roundTrips": 3,
-        "firstRenderMs": 1332.9,
-        "firstRenderMs_p10_p90": [
-          1052.58,
-          1516.7399999999998
+        "networkBytes": 244771,
+        "uiBytes": 242532,
+        "bridgeMessages": 13,
+        "bridgeMessages_range": [
+          12,
+          13
         ],
-        "totalMs": 2310.7,
+        "roundTrips": 3,
+        "firstRenderMs": 3077,
+        "firstRenderMs_p10_p90": [
+          3015.32,
+          3337.96
+        ],
+        "totalMs": 5345,
         "totalMs_p10_p90": [
-          1979.8200000000004,
-          2429.4200000000005
+          5298.76,
+          5396.280000000001
         ],
         "llmCalls": 2,
-        "inputTokens": 1733,
+        "inputTokens": 1736,
         "inputTokens_range": [
-          1727,
-          1760
+          1678,
+          1755
         ],
         "outputTokens": 31,
         "outputTokens_range": [
-          31,
+          30,
           32
         ],
         "composeRetries": 0
       },
       "a2ui": {
         "n": 3,
-        "networkBytes": 7545,
+        "networkBytes": 7565,
         "networkBytes_range": [
-          7545,
-          7581
+          7553,
+          7584
         ],
-        "uiBytes": 4136,
+        "uiBytes": 4137,
         "bridgeMessages": 0,
         "roundTrips": 2,
-        "firstRenderMs": 1246,
+        "firstRenderMs": 3353.7,
         "firstRenderMs_p10_p90": [
-          1188.4,
-          1334.64
+          2971.38,
+          4273.22
         ],
-        "totalMs": 2362.6,
+        "totalMs": 6422.8,
         "totalMs_p10_p90": [
-          2287.7200000000003,
-          3119.4
+          6288.48,
+          8534.720000000001
         ],
         "llmCalls": 2,
-        "inputTokens": 16666,
+        "inputTokens": 16807,
         "inputTokens_range": [
-          16649,
-          16711
+          16730,
+          16810
         ],
-        "outputTokens": 28,
+        "outputTokens": 32,
         "outputTokens_range": [
-          28,
-          35
+          29,
+          36
+        ],
+        "composeRetries": 0
+      },
+      "a2ui-agui": {
+        "n": 3,
+        "networkBytes": 20777,
+        "networkBytes_range": [
+          20669,
+          21205
+        ],
+        "uiBytes": 4137,
+        "bridgeMessages": 0,
+        "roundTrips": 2,
+        "firstRenderMs": 3264,
+        "firstRenderMs_p10_p90": [
+          3224.4,
+          4143.84
+        ],
+        "totalMs": 6144,
+        "totalMs_p10_p90": [
+          5730.64,
+          6755.039999999999
+        ],
+        "llmCalls": 4,
+        "inputTokens": 38697,
+        "inputTokens_range": [
+          38631,
+          38759
+        ],
+        "outputTokens": 78,
+        "outputTokens_range": [
+          76,
+          78
         ],
         "composeRetries": 0
       }
@@ -223,114 +316,126 @@
     "S3": {
       "mcp": {
         "n": 3,
-        "networkBytes": 431356,
-        "uiBytes": 425944,
-        "bridgeMessages": 16,
-        "bridgeMessages_range": [
-          15,
-          16
-        ],
+        "networkBytes": 431845,
+        "uiBytes": 426353,
+        "bridgeMessages": 15,
         "roundTrips": 4,
-        "firstRenderMs": 1228.7,
+        "firstRenderMs": 2603.9,
         "firstRenderMs_p10_p90": [
-          970.4599999999998,
-          1479.9
+          1986.14,
+          2880.8599999999997
         ],
-        "totalMs": 2081.9,
+        "totalMs": 4348.3,
         "totalMs_p10_p90": [
-          1901.7399999999998,
-          3053.1
+          3988.54,
+          4578.62
         ],
         "llmCalls": 2,
-        "inputTokens": 1905,
+        "inputTokens": 1892,
         "inputTokens_range": [
-          1881,
-          1942
+          1891,
+          1924
         ],
         "outputTokens": 28,
+        "outputTokens_range": [
+          27,
+          28
+        ],
         "composeRetries": 0
       },
       "a2ui": {
         "n": 3,
-        "networkBytes": 9665,
-        "uiBytes": 4718,
+        "networkBytes": 9706,
+        "networkBytes_range": [
+          9698,
+          9706
+        ],
+        "uiBytes": 4759,
         "bridgeMessages": 0,
         "roundTrips": 3,
-        "firstRenderMs": 2236.4,
+        "firstRenderMs": 2612.6,
         "firstRenderMs_p10_p90": [
-          1058.8,
-          2422.4799999999996
+          2192.52,
+          2912.36
         ],
-        "totalMs": 3211.6,
+        "totalMs": 4610.9,
         "totalMs_p10_p90": [
-          2275.28,
-          3675.28
+          4210.26,
+          4746.5
         ],
         "llmCalls": 2,
-        "inputTokens": 16909,
+        "inputTokens": 16976,
         "inputTokens_range": [
-          16898,
-          16914
+          16974,
+          17057
         ],
         "outputTokens": 28,
+        "outputTokens_range": [
+          27,
+          28
+        ],
+        "composeRetries": 0
+      },
+      "a2ui-agui": {
+        "n": 3,
+        "networkBytes": 39327,
+        "networkBytes_range": [
+          38658,
+          39504
+        ],
+        "uiBytes": 4759,
+        "bridgeMessages": 0,
+        "roundTrips": 3,
+        "firstRenderMs": 2463.8,
+        "firstRenderMs_p10_p90": [
+          2237.16,
+          3251.4800000000005
+        ],
+        "totalMs": 5079.9,
+        "totalMs_p10_p90": [
+          4609.26,
+          5484.3
+        ],
+        "llmCalls": 6,
+        "inputTokens": 65626,
+        "inputTokens_range": [
+          65429,
+          65813
+        ],
+        "outputTokens": 135,
+        "outputTokens_range": [
+          133,
+          135
+        ],
         "composeRetries": 0
       }
     },
     "S4": {
       "mcp": {
         "n": 3,
-        "networkBytes": 243722,
-        "uiBytes": 241812,
-        "bridgeMessages": 7,
+        "networkBytes": 244116,
+        "uiBytes": 242221,
+        "bridgeMessages": 8,
         "bridgeMessages_range": [
           7,
           8
         ],
         "roundTrips": 2,
-        "firstRenderMs": 1689.8,
+        "firstRenderMs": 3758.1,
         "firstRenderMs_p10_p90": [
-          811.72,
-          2278.12
+          2665.38,
+          4304.58
         ],
-        "totalMs": 3166.2,
+        "totalMs": 5968.6,
         "totalMs_p10_p90": [
-          2269.7200000000003,
-          4907.640000000001
+          4410.5199999999995,
+          6139.960000000001
         ],
         "llmCalls": 2,
-        "inputTokens": 1834,
+        "inputTokens": 1851,
         "inputTokens_range": [
-          1825,
-          1869
-        ],
-        "outputTokens": 43,
-        "composeRetries": 0
-      },
-      "a2ui": {
-        "n": 3,
-        "networkBytes": 4703,
-        "networkBytes_range": [
-          4684,
-          4703
-        ],
-        "uiBytes": 2835,
-        "bridgeMessages": 0,
-        "roundTrips": 1,
-        "firstRenderMs": 2106.9,
-        "firstRenderMs_p10_p90": [
-          1225.78,
-          2906.1
-        ],
-        "totalMs": 3101,
-        "totalMs_p10_p90": [
-          2380.6800000000003,
-          3966.12
-        ],
-        "llmCalls": 2,
-        "inputTokens": 16867,
-        "inputTokens_range": [
-          16864,
-          16914
+          1833,
+          1862
         ],
         "outputTokens": 45,
         "outputTokens_range": [
@@ -338,82 +443,177 @@
           45
         ],
         "composeRetries": 0
+      },
+      "a2ui": {
+        "n": 3,
+        "networkBytes": 4677,
+        "networkBytes_range": [
+          4671,
+          4690
+        ],
+        "uiBytes": 2822,
+        "bridgeMessages": 0,
+        "roundTrips": 1,
+        "firstRenderMs": 3658.1,
+        "firstRenderMs_p10_p90": [
+          3058.1,
+          3963.7799999999997
+        ],
+        "totalMs": 6529.5,
+        "totalMs_p10_p90": [
+          5076.219999999999,
+          7366.780000000001
+        ],
+        "llmCalls": 2,
+        "inputTokens": 16855,
+        "inputTokens_range": [
+          16855,
+          16908
+        ],
+        "outputTokens": 44,
+        "outputTokens_range": [
+          43,
+          45
+        ],
+        "composeRetries": 0
+      },
+      "a2ui-agui": {
+        "n": 3,
+        "networkBytes": 10050,
+        "networkBytes_range": [
+          9934,
+          10050
+        ],
+        "uiBytes": 2822,
+        "bridgeMessages": 0,
+        "roundTrips": 1,
+        "firstRenderMs": 3764.6,
+        "firstRenderMs_p10_p90": [
+          3737.8799999999997,
+          4002.9199999999996
+        ],
+        "totalMs": 6440.1,
+        "totalMs_p10_p90": [
+          5938.9800000000005,
+          6704.18
+        ],
+        "llmCalls": 2,
+        "inputTokens": 18528,
+        "inputTokens_range": [
+          18508,
+          18536
+        ],
+        "outputTokens": 45,
+        "composeRetries": 0
       }
     },
     "S5": {
       "mcp": {
         "n": 3,
-        "networkBytes": 420206,
-        "uiBytes": 417193,
+        "networkBytes": 420613,
+        "uiBytes": 417586,
         "bridgeMessages": 12,
         "roundTrips": 3,
-        "firstRenderMs": 2429.5,
+        "firstRenderMs": 4959,
         "firstRenderMs_p10_p90": [
-          2011.9,
-          7939.9
+          4553.16,
+          5581.96
         ],
-        "totalMs": 7083.3,
+        "totalMs": 8413.3,
         "totalMs_p10_p90": [
-          907.9399999999994,
-          7687.62
+          6823.779999999999,
+          8591.539999999999
         ],
         "llmCalls": 2,
-        "inputTokens": 2605,
+        "inputTokens": 2618,
         "inputTokens_range": [
-          2509,
-          2614
+          2610,
+          2644
         ],
         "outputTokens": 54,
         "outputTokens_range": [
           53,
-          54
+          65
         ],
         "composeRetries": 0
       },
       "a2ui": {
         "n": 3,
-        "networkBytes": 2615,
+        "networkBytes": 2574,
         "networkBytes_range": [
-          2503,
-          2621
+          2552,
+          2576
         ],
-        "uiBytes": 1220,
+        "uiBytes": 1192,
         "uiBytes_range": [
-          1211,
-          1237
+          1172,
+          1194
         ],
         "bridgeMessages": 0,
         "roundTrips": 1,
-        "firstRenderMs": 34931.8,
+        "firstRenderMs": 47336.9,
         "firstRenderMs_p10_p90": [
-          27620.440000000002,
-          44082.67999999999
+          36242.9,
+          51155.22
         ],
-        "totalMs": 34959.3,
+        "totalMs": 47343.5,
         "totalMs_p10_p90": [
-          27957.379999999994,
-          44059.77999999999
+          36252.78,
+          51170.94
         ],
         "llmCalls": 3,
         "llmCalls_range": [
           2,
           3
         ],
-        "inputTokens": 36792,
+        "inputTokens": 33510,
         "inputTokens_range": [
-          19853,
-          39476
+          19918,
+          34910
         ],
-        "outputTokens": 1622,
+        "outputTokens": 847,
         "outputTokens_range": [
-          846,
-          1646
+          847,
+          858
         ],
-        "composeRetries": 1,
-        "composeRetries_range": [
-          0,
-          1
-        ]
+        "composeRetries": 0
+      },
+      "a2ui-agui": {
+        "n": 3,
+        "networkBytes": 40139,
+        "networkBytes_range": [
+          36370,
+          44646
+        ],
+        "uiBytes": 1171,
+        "uiBytes_range": [
+          1076,
+          1180
+        ],
+        "bridgeMessages": 0,
+        "roundTrips": 1,
+        "firstRenderMs": 37580,
+        "firstRenderMs_p10_p90": [
+          31820.0,
+          38538.96
+        ],
+        "totalMs": 40811.6,
+        "totalMs_p10_p90": [
+          34031.6,
+          40966.240000000005
+        ],
+        "llmCalls": 4,
+        "inputTokens": 53924,
+        "inputTokens_range": [
+          53143,
+          57164
+        ],
+        "outputTokens": 546,
+        "outputTokens_range": [
+          545,
+          865
+        ],
+        "composeRetries": 0
       }
     }
   }

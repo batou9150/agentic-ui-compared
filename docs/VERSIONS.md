@@ -27,6 +27,8 @@ dated header of `COMPARISON.md`.
 | a2ui-agent-sdk | 0.10.0 (import `a2ui`) | a2ui agent |
 | a2ui-core | 0.5.0 | a2ui agent (transitive, pinned) |
 | a2ui-a2a | 0.2.0 (import `a2ui.a2a`) | a2ui agent (A2A extension helpers, split out of a2ui-agent-sdk) |
+| ag-ui-adk | 0.12.0 | a2ui agent, AG-UI endpoint (`/agui`) |
+| ag-ui-protocol | 1.0.0 | a2ui agent, AG-UI events (import `ag_ui`) |
 | a2a-sdk | 0.3.26 | a2ui agent (capped `<0.4` by a2ui-a2a 0.2.0) |
 | uvicorn | 0.54.0 | mcp-apps server |
 | starlette | 1.7.0 | mcp-apps server (CORS) |
@@ -49,6 +51,10 @@ dated header of `COMPARISON.md`.
 | @a2ui/web_core | 0.12.0 | a2ui client, compare right pane |
 | @a2ui/lit | 0.12.0 | a2ui client, compare right pane |
 | @a2ui/markdown-it | 0.2.0 | Markdown in A2UI `Text` (peer of @a2ui/lit) |
+| @ag-ui/client | 1.0.4 | a2ui client (AG-UI connection), compare relay |
+| @ag-ui/a2ui-middleware | 0.0.14 | compare relay (needs Node: imports `crypto`) |
+| @ag-ui/encoder | 1.0.4 | compare relay (SSE encoding) |
+| rxjs | 7.8.1 | compare relay (peer of @ag-ui/client and the middleware) |
 | @a2a-js/sdk | 0.3.14 | a2ui client (0.3 line, matches a2a-sdk 0.3 on the server) |
 | lit | 3.3.3 | A2UI custom components |
 | chart.js | 4.5.1 | forecast chart (same library on both sides) |
@@ -119,3 +125,11 @@ None of these break the plan; they change how it is implemented.
     import path. The generated system prompt went from 28,443 to 28,608
     characters, so the Live token figures still hold. This is also the A2UI
     line that `ag_ui_adk` 0.12 requires (`a2ui-agent-sdk>=0.10,<0.11`).
+12. **AG-UI with ADK, A2UI clicks** (2026-11-06): `@ag-ui/a2ui-middleware`
+    0.0.14 sends a click as a synthetic `log_a2ui_event` tool call and result
+    appended to the history; `ag_ui_adk` 0.12.0 only accepts tool results for
+    calls ADK has pending, logs "Skipping tool result batch ... no matching
+    pending tool calls" and ends the run with no output. `a2ui_agent/agui.py`
+    rewrites the pair as a user message with the same text
+    (`AguiRequestShim`). The middleware also ignores A2UI written in text
+    replies (it reads tool results), hence the `compose_ui` tool.
