@@ -81,8 +81,8 @@ connector, or through `npx mcp-remote <url>` for Claude Desktop). Tested with Cl
 ## Versions
 
 Specs and SDKs move fast; everything is pinned. MCP Apps spec `2026-01-26`
-(ext-apps 2.0.3, `mcp` 2.3.0), A2UI v0.9.1 (`a2ui-agent-sdk` 0.7.0,
-`@a2ui/lit` 0.12.0), Google ADK 2.11.0. See [docs/VERSIONS.md](docs/VERSIONS.md).
+(ext-apps 2.0.3, `mcp` 2.3.0), A2UI v0.9.1 (`a2ui-agent-sdk` 0.10.0,
+`@a2ui/lit` 0.12.0), Google ADK 2.13.0. See [docs/VERSIONS.md](docs/VERSIONS.md).
 
 ## Data and license
 

@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from a2ui_agent.catalog import weather_catalog
+from a2ui_agent.catalog import validate
 from weather_core import FixtureTransport, Forecast, OpenMeteoClient, WeatherService
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -76,7 +76,7 @@ def rebind() -> None:
         assert m
         field = "temperature_max" if m["kind"] == "Max" else "temperature_min"
         series["values"] = [getattr(d, field) for d in forecasts[m["city"]].daily]
-    weather_catalog().validate(doc["messages"])
+    validate(doc["messages"])
     doc["rebound"] = (
         "Series values and day labels replaced with the Scripted fixtures "
         f"(now = {SCRIPTED_NOW:%Y-%m-%dT%H:%MZ}) by scripts/record_s5.py --rebind; "
@@ -128,7 +128,7 @@ def main() -> None:
         raise SystemExit(
             f"The model did not compose a layout. It answered: {text!r} (usage {usage})"
         )
-    weather_catalog().validate(messages)
+    validate(messages)
     doc = {
         "source": f"Recorded from a Live run on {datetime.now(UTC):%Y-%m-%d} with "
         f"{os.environ.get('AGENT_MODEL', 'gemini-3.8-flash')} (usage {usage}).",

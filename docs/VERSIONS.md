@@ -1,6 +1,7 @@
 # Versions
 
-Snapshot taken on **2026-10-04**. Every version below is pinned exactly in the
+Snapshot taken on **2026-10-04**; A2UI agent dependencies bumped on
+**2026-11-06**. Every version below is pinned exactly in the
 lockfiles (`uv.lock`, `package-lock.json`). Bumping any of them means
 re-running `make test` and `make measure`, then updating this file and the
 dated header of `COMPARISON.md`.
@@ -22,13 +23,14 @@ dated header of `COMPARISON.md`.
 | httpx | 0.28.1 | core |
 | pydantic | 2.13.5 | core |
 | mcp | 2.3.0 | mcp-apps server (`MCPServer` + `mcp.server.apps.Apps`) |
-| google-adk | 2.11.0 | a2ui agent |
-| a2ui-agent-sdk | 0.7.0 (import `a2ui`) | a2ui agent |
-| a2ui-core | 0.2.0 | a2ui agent (transitive, pinned) |
-| a2a-sdk | 0.3.26 | a2ui agent (capped `<0.4` by a2ui-agent-sdk 0.7.0) |
+| google-adk | 2.13.0 | a2ui agent |
+| a2ui-agent-sdk | 0.10.0 (import `a2ui`) | a2ui agent |
+| a2ui-core | 0.5.0 | a2ui agent (transitive, pinned) |
+| a2ui-a2a | 0.2.0 (import `a2ui.a2a`) | a2ui agent (A2A extension helpers, split out of a2ui-agent-sdk) |
+| a2a-sdk | 0.3.26 | a2ui agent (capped `<0.4` by a2ui-a2a 0.2.0) |
 | uvicorn | 0.54.0 | mcp-apps server |
 | starlette | 1.7.0 | mcp-apps server (CORS) |
-| google-genai | 2.28.0 | a2ui agent, compare live bridge |
+| google-genai | 2.34.0 | a2ui agent, compare live bridge (google-adk 2.13 needs `>=2.30,<3`) |
 | pyyaml | 6.0.3 | scenarios loader |
 | jsonschema | 4.26.0 | A2UI message validation in tests |
 | pytest | 9.1.1 | tests |
@@ -95,10 +97,10 @@ None of these break the plan; they change how it is implemented.
 7. **MCP Apps hosts need two origins**: the stable spec requires a sandbox
    proxy on a separate origin, with the CSP sent as an HTTP header. The
    compare app therefore serves a second port for the sandbox.
-8. **Version coupling on the A2UI side**: `a2ui-agent-sdk` 0.7.0 caps
-   `a2a-sdk` below 0.4, so the client uses `@a2a-js/sdk` 0.3.x rather than
-   the latest 1.x.
-9. **Environment variables**: google-genai 2.28 adds
+8. **Version coupling on the A2UI side**: `a2ui-a2a` 0.2.0 (and before it
+   `a2ui-agent-sdk` 0.7.0) caps `a2a-sdk` below 0.4, so the client uses
+   `@a2a-js/sdk` 0.3.x rather than the latest 1.x.
+9. **Environment variables**: google-genai 2.28+ adds
    `GOOGLE_GENAI_USE_ENTERPRISE` next to `GOOGLE_GENAI_USE_VERTEXAI`; when both
    are set and conflict, ENTERPRISE wins. `.env.example` documents only the
    former.
@@ -106,3 +108,14 @@ None of these break the plan; they change how it is implemented.
     Lit shell sample sends the v0.8 `userAction` name; the A2A extension doc
     shows a v0.8-shaped component; v0.9.1 schema files carry `v0_9` `$id`s,
     so validation needs an explicit `referencing` registry.
+11. **a2ui-agent-sdk 0.10 API** (bumped from 0.7.0 on 2026-11-06): the SDK no
+    longer bundles the spec JSON files (`a2ui.assets`) or `a2ui.schema`; the
+    basic catalog comes from `a2ui.core.basic_catalog.BasicCatalog`, protocol
+    schemas from `a2ui.utils.schemas`, catalogs are loaded with
+    `a2ui.processor.InMemoryCatalogProvider`, the prompt is pruned with
+    `ComponentPruningTransformer`, and validation is
+    `a2ui.utils.renderer_state.validate_payload` (the parser validates too).
+    The A2A helpers moved to the separate `a2ui-a2a` package with the same
+    import path. The generated system prompt went from 28,443 to 28,608
+    characters, so the Live token figures still hold. This is also the A2UI
+    line that `ag_ui_adk` 0.12 requires (`a2ui-agent-sdk>=0.10,<0.11`).

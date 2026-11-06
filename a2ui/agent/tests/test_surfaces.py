@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from a2ui_agent import surfaces
-from a2ui_agent.catalog import WEATHER_CATALOG_ID, weather_catalog
+from a2ui_agent.catalog import WEATHER_CATALOG_ID, validate
 from weather_core import CityWeather, Forecast, Resolution, Units, WeatherService
 
 from .spec import assert_spec_valid
@@ -12,7 +12,7 @@ from .spec import assert_spec_valid
 
 def check(messages: list[dict[str, Any]]) -> None:
     assert_spec_valid(messages)
-    weather_catalog().validate(messages)  # the SDK's own processor, strict mode
+    validate(messages)  # the SDK's own renderer-side check
 
 
 async def test_weather_card(service: WeatherService) -> None:

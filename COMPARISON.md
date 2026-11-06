@@ -1,9 +1,10 @@
 # MCP Apps vs A2UI: a measured comparison
 
-*Snapshot of 2026-10-04. MCP Apps spec `2026-01-26` (stable) with
-`@modelcontextprotocol/ext-apps` 2.0.3 and `mcp` 2.3.0 (Python). A2UI spec
-v0.9.1 with `a2ui-agent-sdk` 0.7.0, `@a2ui/lit` 0.12.0 and `google-adk`
-2.11.0. Exact pins in [docs/VERSIONS.md](docs/VERSIONS.md).*
+*Snapshot of 2026-10-04, dependencies and Scripted measurements refreshed on
+2026-11-06 (Live measurements are from 2026-10-05). MCP Apps spec `2026-01-26`
+(stable) with `@modelcontextprotocol/ext-apps` 2.0.3 and `mcp` 2.3.0
+(Python). A2UI spec v0.9.1 with `a2ui-agent-sdk` 0.10.0, `@a2ui/lit` 0.12.0
+and `google-adk` 2.13.0. Exact pins in [docs/VERSIONS.md](docs/VERSIONS.md).*
 
 The same weather app was built twice on a shared domain package (`core/`), then
 both versions were run side by side with identical inputs in a test harness.
@@ -18,7 +19,7 @@ winner: the two approaches answer different questions.
   has.
 - **The network cost follows.** Per scenario, MCP Apps moved 237 to 421 KB
   (the self-contained views, about 61 KB each once gzipped) against 3 to
-  10 KB for A2UI. The A2UI rendering code (785 KB raw, 230 KB gzip) is part
+  10 KB for A2UI. The A2UI rendering code (788 KB raw, 231 KB gzip) is part
   of the client app instead, loaded once.
 - **Layout ownership differs.** In MCP Apps the developer owns every pixel of
   the view and the host owns the frame around it; in A2UI the client owns
@@ -110,19 +111,19 @@ both sides (data applied, then two animation frames). Lines of code exclude
 blank and comment-only lines, generated files and the shared `core/`.
 
 <!-- measurements:start -->
-Measured on 2026-10-04 (scripted mode, median of 10 runs after one warm-up; Darwin arm64, Node v25.4.0, Python 3.13.7). Reproduce with `make measure`.
+Measured on 2026-11-06 (scripted mode, median of 10 runs after one warm-up; Darwin arm64, Node v25.4.0, Python 3.14.8). Reproduce with `make measure`.
 
 **UI code size** (lines of code, blank and comment-only lines excluded; core/ is shared and not counted)
 
 | Side | Role | LOC |
 |---|---|---|
-| MCP Apps | UI (ui:// views, TS + CSS + HTML) | 665 |
+| MCP Apps | UI (ui:// views, TS + CSS + HTML) | 679 |
 | MCP Apps | Server (tools, resources, transport) | 215 |
-| **MCP Apps** | **total** | **880** |
-| A2UI | UI (surface builders, catalog: Python + TS custom components) | 535 |
-| A2UI | Agent (tools, prompt, executor, A2A server) | 554 |
+| **MCP Apps** | **total** | **894** |
+| A2UI | UI (surface builders, catalog: Python + TS custom components) | 545 |
+| A2UI | Agent (tools, prompt, executor, A2A server) | 558 |
 | A2UI | Client app (A2A connection, chat shell) | 285 |
-| **A2UI** | **total** | **1374** |
+| **A2UI** | **total** | **1388** |
 | Harness only (not product code) | Minimal MCP Apps host (what a real host provides) | 411 |
 | **Harness only (not product code)** | **total** | **411** |
 
@@ -130,26 +131,26 @@ Measured on 2026-10-04 (scripted mode, median of 10 runs after one warm-up; Darw
 
 | Artifact | Raw | Gzip |
 |---|---|---|
-| MCP Apps view `current.html` (self-contained, sent per session) | 234.1 KB | 60.7 KB |
-| MCP Apps view `forecast.html` (self-contained, sent per session) | 401.9 KB | 118.0 KB |
-| MCP Apps view `world-clock.html` (self-contained, sent per session) | 233.6 KB | 60.6 KB |
-| A2UI client bundle (renderer + catalog + A2A client, loaded once) | 784.9 KB | 229.8 KB |
-| A2UI system prompt with the catalog schema (Live mode, every LLM call) | 28,443 chars | |
+| MCP Apps view `current.html` (self-contained, sent per session) | 234.5 KB | 60.9 KB |
+| MCP Apps view `forecast.html` (self-contained, sent per session) | 402.4 KB | 118.2 KB |
+| MCP Apps view `world-clock.html` (self-contained, sent per session) | 234.1 KB | 60.8 KB |
+| A2UI client bundle (renderer + catalog + A2A client, loaded once) | 788.1 KB | 231.2 KB |
+| A2UI system prompt with the catalog schema (Live mode, every LLM call) | 28,608 chars | |
 
 **Per scenario** (network = bytes on the wire between UI and backend, JSON bodies; UI payload = ui:// HTML + view data for MCP Apps, A2UI messages for A2UI; first render = from the prompt to the requested information painted)
 
 | Scenario | Side | Network | UI payload | Round trips | Host-view messages | First render (p10-p90) |
 |---|---|---|---|---|---|---|
-| S1 | MCP Apps | 236.6 KB | 234.9 KB | 2 | 7 | 59 ms (57-70) |
-| S1 | A2UI | 3.3 KB | 1.8 KB | 1 | 0 | 3 ms (3-4) |
-| S2 | MCP Apps | 238.6 KB | 236.4 KB | 3 | 12 | 58 ms (55-59) |
-| S2 | A2UI | 7.3 KB | 4.0 KB | 2 | 0 | 3 ms (2-3) |
-| S3 | MCP Apps | 420.9 KB | 415.6 KB | 4 | 15 | 87 ms (70-91) |
-| S3 | A2UI | 9.7 KB | 4.6 KB | 3 | 0 | 3 ms (3-5) |
-| S4 | MCP Apps | 237.9 KB | 236.1 KB | 2 | 6 | 70 ms (56-72) |
-| S4 | A2UI | 4.6 KB | 2.8 KB | 1 | 0 | 4 ms (3-6) |
-| S5 | MCP Apps | 410.3 KB | 407.3 KB | 3 | 12 | 95 ms (88-107) |
-| S5 | A2UI | 8.9 KB | 1.1 KB | 3 | 0 | 4 ms (2-5) |
+| S1 | MCP Apps | 237.0 KB | 235.4 KB | 2 | 7 | 59 ms (57-77) |
+| S1 | A2UI | 3.3 KB | 1.8 KB | 1 | 0 | 3 ms (3-5) |
+| S2 | MCP Apps | 239.0 KB | 236.8 KB | 3 | 12 | 73 ms (57-78) |
+| S2 | A2UI | 7.3 KB | 4.0 KB | 2 | 0 | 4 ms (3-10) |
+| S3 | MCP Apps | 421.3 KB | 416.1 KB | 4 | 15 | 89 ms (84-133) |
+| S3 | A2UI | 9.7 KB | 4.6 KB | 3 | 0 | 5 ms (3-12) |
+| S4 | MCP Apps | 238.4 KB | 236.6 KB | 2 | 6 | 64 ms (57-76) |
+| S4 | A2UI | 4.6 KB | 2.8 KB | 1 | 0 | 3 ms (3-4) |
+| S5 | MCP Apps | 410.8 KB | 407.8 KB | 3 | 12 | 104 ms (94-111) |
+| S5 | A2UI | 9.3 KB | 1.1 KB | 3 | 0 | 5 ms (3-7) |
 <!-- measurements:end -->
 
 How to read them:
