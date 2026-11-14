@@ -69,15 +69,16 @@ LOC_GROUPS: dict[str, dict[str, list[str]]] = {
             "a2ui/agent/src/a2ui_agent/server.py",
             "a2ui/agent/src/a2ui_agent/__main__.py",
         ],
-        "Client app (A2A connection, chat shell)": [
+        "Client app (A2A connection, chat shell, Markdown for Text)": [
             "a2ui/client/src/connection.ts",
             "a2ui/client/src/chat.ts",
+            "a2ui/client/src/markdown.ts",
             "a2ui/client/src/main.ts",
             "a2ui/client/index.html",
         ],
     },
     "A2UI over AG-UI (added to the A2UI side, same agent and renderer)": {
-        "Agent (AG-UI endpoint, tool envelopes, click shim, replay model)": [
+        "Agent (AG-UI endpoint, tool envelopes, run tracking, replay model)": [
             "a2ui/agent/src/a2ui_agent/agui.py",
         ],
         "Client (AG-UI connection)": ["a2ui/client/src/agui-connection.ts"],
@@ -170,9 +171,18 @@ def artifact_report() -> dict[str, Any]:
     }
 
 
+# Browser passes: both panes (A2UI over A2A, a new surface in one createSurface),
+# the A2UI pane alone over AG-UI, then over A2A with a new surface sent as
+# createSurface + updateComponents + updateDataModel (A2UI_CREATE=split).
+PASSES = [
+    {"MEASURE_A2UI_TRANSPORT": "a2a", "A2UI_CREATE": "inline"},
+    {"MEASURE_A2UI_TRANSPORT": "agui", "A2UI_CREATE": "inline"},
+    {"MEASURE_A2UI_TRANSPORT": "a2a", "A2UI_CREATE": "split"},
+]
+
+
 def browser_runs(mode: str, runs: int) -> None:
-    """Both panes (A2UI over A2A), then the A2UI pane alone over AG-UI."""
-    for transport in ("a2a", "agui"):
+    for env in PASSES:
         run(
             ["npx", "playwright", "test", "-c", "measure/playwright.config.ts"],
             cwd=ROOT / "scenarios",
@@ -180,7 +190,7 @@ def browser_runs(mode: str, runs: int) -> None:
                 "MEASURE_RUNS": str(runs),
                 "MEASURE_MODE": mode,
                 "MEASURE_OUT": str(RAW),
-                "MEASURE_A2UI_TRANSPORT": transport,
+                **env,
             },
         )
 
@@ -190,15 +200,26 @@ def raw_rows(mode: str) -> list[dict[str, Any]]:
     agui = RAW / f"runs-{mode}-agui.json"
     if agui.exists():
         rows += json.loads(agui.read_text())
+    split = RAW / f"runs-{mode}-split.json"
+    if split.exists():
+        rows += [{**r, "create": "split"} for r in json.loads(split.read_text())]
     return rows
 
 
 def row_key(row: dict[str, Any]) -> str:
-    """mcp, a2ui (over A2A) or a2ui-agui; runs recorded before transports are A2A."""
+    """mcp, a2ui (over A2A), a2ui-agui or a2ui-split; runs recorded before
+    transports are A2A."""
+    if row.get("create") == "split":
+        return "a2ui-split"
     return "a2ui-agui" if row.get("transport") == "agui" else row["side"]
 
 
-LABELS = {"mcp": "MCP Apps", "a2ui": "A2UI over A2A", "a2ui-agui": "A2UI over AG-UI"}
+LABELS = {
+    "mcp": "MCP Apps",
+    "a2ui": "A2UI over A2A",
+    "a2ui-agui": "A2UI over AG-UI",
+    "a2ui-split": "A2UI over A2A, split createSurface",
+}
 
 
 NUMERIC = [

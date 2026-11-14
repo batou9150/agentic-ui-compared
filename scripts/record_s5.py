@@ -22,14 +22,15 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from a2ui_agent.catalog import validate
+from a2ui.a2a.extension import get_a2ui_extension_uri
+from a2ui_agent.catalog import A2UI_VERSION, validate
 from weather_core import FixtureTransport, Forecast, OpenMeteoClient, WeatherService
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "scenarios" / "recorded" / "S5-a2ui-compose.json"
 PROMPT = "Compare Paris and Tokyo over the next 7 days on one chart"
 DESIGNED = ("weather-", "forecast-", "picker-", "clock-")  # surfaces built by tools
-EXTENSION = "https://a2ui.org/a2a-extension/a2ui/v0.9.1"
+EXTENSION = get_a2ui_extension_uri(A2UI_VERSION)
 SCRIPTED_NOW = datetime(2026, 10, 4, 12, tzinfo=UTC)  # WEATHER_FIXED_NOW in compare.sh
 SERIES = re.compile(r"^(?P<city>.+?) \((?P<kind>Max|Min)\b")  # e.g. "Paris (Max)"
 
@@ -59,7 +60,8 @@ def rebind() -> None:
     charts = [
         c
         for m in doc["messages"]
-        for c in m.get("updateComponents", {}).get("components", [])
+        for key in ("createSurface", "updateComponents")
+        for c in m.get(key, {}).get("components", [])
         if c.get("component") == "Chart"
     ]
     matches = [(s, SERIES.match(s["label"])) for c in charts for s in c["series"]]

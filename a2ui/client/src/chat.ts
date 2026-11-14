@@ -1,9 +1,8 @@
 // <weather-a2ui-chat>: a minimal chat where agent surfaces render inline,
 // with the official A2UI Lit renderer (<a2ui-surface>).
-import "@a2ui/lit/v0_9";
-import type { SurfaceModel } from "@a2ui/web_core/v0_9";
-import { renderMarkdown } from "@a2ui/markdown-it";
-import { injectBasicCatalogStyles, setMarkdownRenderer } from "@a2ui/web_core/v0_9/basic_catalog";
+import "@a2ui/lit";
+import { injectBasicCatalogStyles, setMarkdownRenderer } from "@a2ui/web_core/catalogs/basic/v1";
+import type { SurfaceModel } from "@a2ui/web_core/v1_0";
 import { LitElement, css, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import {
@@ -12,6 +11,7 @@ import {
   type ConnectionHooks,
   type TurnResult,
 } from "./connection";
+import { renderMarkdown } from "./markdown";
 
 export type Transport = "a2a" | "agui";
 type ConnectionClass = new (url: string, hooks: ConnectionHooks) => AgentConnection;

@@ -1,14 +1,28 @@
 """Designed A2UI surfaces for the weather tools (the A2UI side's "views").
 
-Each builder turns a weather_core model into A2UI v0.9.1 messages:
-createSurface + updateComponents (layout, bound to data paths) +
-updateDataModel (display values). Controls only need a data model update.
+Each builder turns a weather_core model into A2UI 1.0 messages: a layout
+bound to data paths, and the display values in the data model. A new surface
+is one createSurface carrying both (`inline`, the default), or, as before 1.0
+allowed that, createSurface + updateComponents + updateDataModel (`split`,
+kept to measure the difference). Controls only need a data model update.
+
+The 1.0 basic catalog has no heading variants on Text: headings are Markdown,
+which Text renders (`formatString` puts a bound value in one).
 """
 
+import os
+from enum import StrEnum
 from typing import Any
 
-from a2ui.builder.v0_9 import Action, ActionEvent, DataBinding
-from a2ui.builder.v0_9.catalogs.basic import Button, Card, Column, Row, Text
+from a2ui.builder.v1_0 import Action, ActionEvent, DataBinding, FunctionCall
+from a2ui.builder.v1_0.catalogs.basic import (
+    Button,
+    Card,
+    Column,
+    FormatString,
+    Row,
+    Text,
+)
 from weather_core import ATTRIBUTION, CityWeather, Forecast, Place, Resolution, Units
 
 from .catalog import MESSAGE_VERSION, WEATHER_CATALOG_ID, Chart, Clock
@@ -36,12 +50,31 @@ ATTRIBUTION_TEXT = f"{ATTRIBUTION.text} ({ATTRIBUTION.license})"
 DAY_OPTIONS = (3, 7, 16)
 
 
+class CreateMode(StrEnum):
+    INLINE = "inline"  # one createSurface with components and data model
+    SPLIT = "split"  # createSurface, then updateComponents and updateDataModel
+
+
+def create_mode() -> CreateMode:
+    """How a new surface is sent, from A2UI_CREATE (inline by default)."""
+    return CreateMode(os.environ.get("A2UI_CREATE", CreateMode.INLINE))
+
+
 def icon(key: str) -> str:
     return ICONS.get(key, ICONS["unknown"])
 
 
 def _bind(path: str) -> DataBinding:
     return DataBinding(path=path)
+
+
+def _heading(level: int, text: str | DataBinding) -> Text:
+    marks = "#" * level
+    if isinstance(text, DataBinding):
+        value: str | FunctionCall = FormatString(value=f"{marks} ${{{text.path}}}")
+    else:
+        value = f"{marks} {text}"
+    return Text(text=value)
 
 
 def _msg(**body: Any) -> Message:
@@ -52,6 +85,26 @@ def create_surface(surface_id: str) -> Message:
     return _msg(
         createSurface={"surfaceId": surface_id, "catalogId": WEATHER_CATALOG_ID}
     )
+
+
+def new_surface(
+    surface_id: str,
+    root: Any,
+    data: Any = None,
+    mode: CreateMode | None = None,
+) -> list[Message]:
+    """The messages that show a new surface: one, or three in split mode."""
+    if (mode or create_mode()) is CreateMode.SPLIT:
+        tail = [] if data is None else [update_data(surface_id, data)]
+        return [create_surface(surface_id), update_components(surface_id, root), *tail]
+    body: dict[str, Any] = {
+        "surfaceId": surface_id,
+        "catalogId": WEATHER_CATALOG_ID,
+        "components": root.flatten(),
+    }
+    if data is not None:
+        body["dataModel"] = data
+    return [_msg(createSurface=body)]
 
 
 def update_components(surface_id: str, root: Any) -> Message:
@@ -90,12 +143,12 @@ def weather_layout() -> Card:
         id="root",
         child=Column(
             children=[
-                Text(text=_bind("/place"), variant="h2"),
+                _heading(2, _bind("/place")),
                 Text(text=_bind("/localTime"), variant="caption"),
                 Row(
                     children=[
-                        Text(text=_bind("/icon"), variant="h1"),
-                        Text(text=_bind("/temperature"), variant="h1"),
+                        _heading(1, _bind("/icon")),
+                        _heading(1, _bind("/temperature")),
                         Text(text=_bind("/condition")),
                     ],
                     align="center",
@@ -115,11 +168,15 @@ def weather_layout() -> Card:
 
 
 def weather_surface(
-    surface_id: str, w: CityWeather, *, create: bool = True
+    surface_id: str,
+    w: CityWeather,
+    *,
+    create: bool = True,
+    mode: CreateMode | None = None,
 ) -> list[Message]:
-    head = [create_surface(surface_id)] if create else []
+    if create:
+        return new_surface(surface_id, weather_layout(), weather_data(w), mode)
     return [
-        *head,
         update_components(surface_id, weather_layout()),
         update_data(surface_id, weather_data(w)),
     ]
@@ -135,6 +192,7 @@ def picker_surface(
     then: str = "weather",
     units: Units = Units.METRIC,
     days: int = 7,
+    mode: CreateMode | None = None,
 ) -> list[Message]:
     """One Button per candidate (in the basic catalog only Button emits actions)."""
 
@@ -150,14 +208,14 @@ def picker_surface(
         id="root",
         child=Column(
             children=[
-                Text(text=f"Which {r.query}?", variant="h2"),
+                _heading(2, f"Which {r.query}?"),
                 Text(text="Several places match. Pick one:", variant="caption"),
                 Row(children=[option(p) for p in r.candidates]),
                 _attribution(),
             ]
         ),
     )
-    return [create_surface(surface_id), update_components(surface_id, layout)]
+    return new_surface(surface_id, layout, mode=mode)
 
 
 # ---- S3 forecast chart -------------------------------------------------------
@@ -224,7 +282,7 @@ def forecast_layout() -> Card:
         id="root",
         child=Column(
             children=[
-                Text(text=_bind("/place"), variant="h2"),
+                _heading(2, _bind("/place")),
                 Text(text=_bind("/subtitle"), variant="caption"),
                 Row(children=controls),
                 Chart(
@@ -240,11 +298,15 @@ def forecast_layout() -> Card:
 
 
 def forecast_surface(
-    surface_id: str, f: Forecast, *, create: bool = True
+    surface_id: str,
+    f: Forecast,
+    *,
+    create: bool = True,
+    mode: CreateMode | None = None,
 ) -> list[Message]:
-    head = [create_surface(surface_id)] if create else []
+    if create:
+        return new_surface(surface_id, forecast_layout(), forecast_data(f), mode)
     return [
-        *head,
         update_components(surface_id, forecast_layout()),
         update_data(surface_id, forecast_data(f)),
     ]
@@ -259,7 +321,9 @@ def forecast_update(surface_id: str, f: Forecast) -> list[Message]:
 
 
 def world_clock_surface(
-    surface_id: str, items: list[CityWeather | Resolution]
+    surface_id: str,
+    items: list[CityWeather | Resolution],
+    mode: CreateMode | None = None,
 ) -> list[Message]:
     cards: list[Card] = []
     data: list[dict[str, Any]] = []
@@ -280,7 +344,7 @@ def world_clock_surface(
                 Card(
                     child=Column(
                         children=[
-                            Text(text=_bind(f"{base}/name"), variant="h3"),
+                            _heading(3, _bind(f"{base}/name")),
                             Text(text=_bind(f"{base}/subtitle"), variant="caption"),
                             Clock(timeZone=_bind(f"{base}/timeZone")),
                             Text(text=_bind(f"{base}/weather")),
@@ -297,15 +361,11 @@ def world_clock_surface(
                 Card(
                     child=Column(
                         children=[
-                            Text(text=_bind(f"{base}/name"), variant="h3"),
+                            _heading(3, _bind(f"{base}/name")),
                             Text(text=_bind(f"{base}/subtitle"), variant="caption"),
                         ]
                     )
                 )
             )
     layout = Column(id="root", children=[Row(children=cards), _attribution()])
-    return [
-        create_surface(surface_id),
-        update_components(surface_id, layout),
-        update_data(surface_id, {"cities": data}),
-    ]
+    return new_surface(surface_id, layout, {"cities": data}, mode)

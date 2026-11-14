@@ -11,38 +11,38 @@ from collections.abc import Iterable
 from functools import cache
 from typing import Any, Literal
 
-from a2ui.builder.v0_9 import ComponentBuilderNode
+from a2ui.builder.v1_0 import ComponentBuilderNode
 from a2ui.catalog_transformers.pruning import ComponentPruningTransformer
 from a2ui.core import CatalogApi
 from a2ui.core.basic_catalog import BasicCatalog
 from a2ui.processor import CatalogConfig, InMemoryCatalogProvider
 from a2ui.utils.renderer_state import validate_payload
 
-A2UI_VERSION = "0.9.1"
-MESSAGE_VERSION = "v0.9.1"
-BASIC_CATALOG_ID = "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+A2UI_VERSION = "1.0"
+MESSAGE_VERSION = "1.0"
+BASIC_CATALOG_ID = "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json"
 WEATHER_CATALOG_ID = (
     "https://github.com/batou9150/agentic-ui-compared/a2ui/weather-catalog.json"
 )
 
-COMMON = "https://a2ui.org/specification/v0_9/common_types.json#/$defs"
+# Written like the basic catalog's own references: resolved against the
+# protocol's common_types.json, never fetched.
+COMMON = "common_types.json#/$defs"
 
 
 def _component(
     name: str, properties: dict[str, Any], required: list[str]
 ) -> dict[str, Any]:
+    # v1.0 component schemas are flat: the envelope keys (id, accessibility,
+    # catalogId, metadata) come from the protocol, not from the catalog.
     return {
         "type": "object",
-        "allOf": [
-            {"$ref": f"{COMMON}/ComponentCommon"},
-            {"$ref": "#/$defs/CatalogComponentCommon"},
-            {
-                "type": "object",
-                "properties": {"component": {"const": name}, **properties},
-                "required": ["component", *required],
-            },
-        ],
-        "unevaluatedProperties": False,
+        "properties": {
+            "component": {"const": name},
+            **properties,
+            "weight": {"$ref": "#/$defs/Weight"},
+        },
+        "required": ["component", *required],
     }
 
 

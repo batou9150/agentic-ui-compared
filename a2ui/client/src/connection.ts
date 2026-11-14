@@ -3,12 +3,12 @@
 // harness turns these into its protocol log and metrics).
 import type { MessageSendParams, Part } from "@a2a-js/sdk";
 import { A2AClient } from "@a2a-js/sdk/client";
-import { MessageProcessor, type ActionPayload, type SurfaceModel } from "@a2ui/web_core/v0_9";
+import { MessageProcessor, type ActionPayload, type SurfaceModel } from "@a2ui/web_core/v1_0";
 import { weatherCatalog } from "./catalog";
 
-export const A2UI_EXTENSION = "https://a2ui.org/a2a-extension/a2ui/v0.9.1";
+export const A2UI_EXTENSION = "https://a2ui.org/a2a-extension/a2ui/v1.0";
 export const A2UI_MIME_TYPE = "application/a2ui+json";
-const MESSAGE_VERSION = "v0.9.1";
+export const MESSAGE_VERSION = "1.0";
 
 export interface ProtocolEvent {
   at: number; // performance.now()
@@ -99,7 +99,7 @@ export class A2uiAgentConnection implements AgentConnection {
   reset(): void {
     this.contextId = undefined;
     for (const id of [...this.processor.getSurfaces().keys()]) {
-      this.processor.processMessages([{ version: "v0.9", deleteSurface: { surfaceId: id } }]);
+      this.processor.processMessages([{ version: MESSAGE_VERSION, deleteSurface: { surfaceId: id } }]);
     }
   }
 

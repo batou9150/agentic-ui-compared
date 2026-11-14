@@ -1,18 +1,14 @@
 {
   "source": "Recorded from a Live run on 2026-10-05 with gemini-3.8-flash (usage {'llm_calls': 2, 'input_tokens': 19921, 'output_tokens': 792, 'compose_retries': 0}).",
+  "rebound": "Series values and day labels replaced with the Scripted fixtures (now = 2026-10-04T12:00Z) by scripts/record_s5.py --rebind; the layout is unchanged from the Live run.",
+  "converted": "Converted to A2UI 1.0 on 2026-11-14: the createSurface and updateComponents messages of the v0.9.1 recording merged into one createSurface. The layout only holds literal values, so the components are unchanged.",
   "text": "Here is the 7-day temperature forecast comparison between Paris and Tokyo:",
   "messages": [
     {
-      "version": "v0.9.1",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "compare-paris-tokyo-forecast",
-        "catalogId": "https://github.com/batou9150/agentic-ui-compared/a2ui/weather-catalog.json"
-      }
-    },
-    {
-      "version": "v0.9.1",
-      "updateComponents": {
-        "surfaceId": "compare-paris-tokyo-forecast",
+        "catalogId": "https://github.com/batou9150/agentic-ui-compared/a2ui/weather-catalog.json",
         "components": [
           {
             "id": "root",
@@ -66,6 +62,5 @@
         ]
       }
     }
-  ],
-  "rebound": "Series values and day labels replaced with the Scripted fixtures (now = 2026-10-04T12:00Z) by scripts/record_s5.py --rebind; the layout is unchanged from the Live run."
+  ]
 }

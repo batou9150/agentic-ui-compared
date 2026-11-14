@@ -15,7 +15,7 @@ from weather_core import WeatherService
 from .fake_llm import FakeLlm, call, say
 from .spec import assert_spec_valid
 
-EXT = "https://a2ui.org/a2a-extension/a2ui/v0.9.1"
+EXT = "https://a2ui.org/a2a-extension/a2ui/v1.0"
 
 
 class Agent:
@@ -69,7 +69,7 @@ class Agent:
             [
                 {
                     "kind": "data",
-                    "data": {"version": "v0.9.1", "action": action},
+                    "data": {"version": "1.0", "action": action},
                     "metadata": {"mimeType": "application/a2ui+json"},
                 }
             ]
@@ -130,11 +130,7 @@ def test_scripted_weather_card(make_agent: Any) -> None:
     )
     msgs = a2ui_messages(task)
     assert_spec_valid(msgs)
-    assert [next(k for k in m if k != "version") for m in msgs] == [
-        "createSurface",
-        "updateComponents",
-        "updateDataModel",
-    ]
+    assert [next(k for k in m if k != "version") for m in msgs] == ["createSurface"]
     assert msgs[0]["createSurface"]["surfaceId"] == "weather-1"
     assert final_text(task).startswith("Paris")
     assert task["status"]["message"]["metadata"]["path"] == "scripted"
@@ -150,7 +146,7 @@ def test_scripted_picker_then_pick(make_agent: Any) -> None:
     assert picker[0]["createSurface"]["surfaceId"] == "picker-1"
     button = next(
         c
-        for c in picker[1]["updateComponents"]["components"]
+        for c in picker[0]["createSurface"]["components"]
         if c["component"] == "Button"
         and c["action"]["event"]["context"]["placeId"] == 4250542
     )
@@ -175,7 +171,7 @@ def test_forecast_control_is_a_data_update(make_agent: Any) -> None:
         "Forecast for Lyon",
         scripted={"tool": "get_forecast", "args": {"city": "Lyon", "days": 7}},
     )
-    place_id = a2ui_messages(task)[2]["updateDataModel"]["value"]["placeId"]
+    place_id = a2ui_messages(task)[0]["createSurface"]["dataModel"]["placeId"]
     task = agent.action(
         "set_forecast",
         "forecast-1",
@@ -198,7 +194,7 @@ def test_scripted_world_clock(make_agent: Any) -> None:
     )
     msgs = a2ui_messages(task)
     assert_spec_valid(msgs)
-    comps = msgs[1]["updateComponents"]["components"]
+    comps = msgs[0]["createSurface"]["components"]
     assert sum(c["component"] == "Clock" for c in comps) == 3
 
 
@@ -253,13 +249,10 @@ def test_live_ui_notes_reach_the_model(make_agent: Any) -> None:
 
 
 COMPOSED = {
-    "version": "v0.9.1",
-    "createSurface": {"surfaceId": "compare-1", "catalogId": WEATHER_CATALOG_ID},
-}
-COMPONENTS = {
-    "version": "v0.9.1",
-    "updateComponents": {
+    "version": "1.0",
+    "createSurface": {
         "surfaceId": "compare-1",
+        "catalogId": WEATHER_CATALOG_ID,
         "components": [
             {"id": "root", "component": "Column", "children": ["chart"]},
             {
@@ -279,9 +272,10 @@ COMPONENTS = {
     },
 }
 BROKEN = {
-    "version": "v0.9.1",
-    "updateComponents": {
+    "version": "1.0",
+    "createSurface": {
         "surfaceId": "compare-1",
+        "catalogId": WEATHER_CATALOG_ID,
         "components": [{"id": "root", "component": "Chart"}],
     },
 }
@@ -295,7 +289,7 @@ def test_live_composed_layout_is_validated(make_agent: Any) -> None:
     agent, _ = make_agent(
         turns=[
             call("get_forecast", city="Paris", days=2, show_ui=False),
-            say(_wrap(COMPOSED, COMPONENTS)),
+            say(_wrap(COMPOSED)),
         ]
     )
     task = agent.text("Compare Paris and Tokyo on one chart")
@@ -307,18 +301,14 @@ def test_live_composed_layout_is_validated(make_agent: Any) -> None:
 
 
 def test_live_invalid_layout_gets_one_retry(make_agent: Any) -> None:
-    agent, _ = make_agent(
-        turns=[say(_wrap(COMPOSED, BROKEN)), say(_wrap(COMPOSED, COMPONENTS))]
-    )
+    agent, _ = make_agent(turns=[say(_wrap(BROKEN)), say(_wrap(COMPOSED))])
     task = agent.text("Compare Paris and Tokyo on one chart")
     assert task["status"]["message"]["metadata"]["usage"]["compose_retries"] == 1
-    assert any("updateComponents" in m for m in a2ui_messages(task))
+    assert any("components" in m.get("createSurface", {}) for m in a2ui_messages(task))
 
 
 def test_live_gives_up_after_one_retry(make_agent: Any) -> None:
-    agent, _ = make_agent(
-        turns=[say(_wrap(COMPOSED, BROKEN)), say(_wrap(COMPOSED, BROKEN))]
-    )
+    agent, _ = make_agent(turns=[say(_wrap(BROKEN)), say(_wrap(BROKEN))])
     task = agent.text("Compare Paris and Tokyo on one chart")
     assert a2ui_messages(task) == []
     assert "invalid" in final_text(task)
@@ -326,7 +316,7 @@ def test_live_gives_up_after_one_retry(make_agent: Any) -> None:
 
 def test_scripted_compose_replays_a_validated_layout(make_agent: Any) -> None:
     agent, _ = make_agent()
-    recorded = {"text": "Both cities.", "messages": [COMPOSED, COMPONENTS]}
+    recorded = {"text": "Both cities.", "messages": [COMPOSED]}
     task = agent.text("Compare", scripted={"compose": recorded})
     first = a2ui_messages(task)[0]
     assert first["createSurface"]["surfaceId"] == "compare-1"
@@ -335,6 +325,6 @@ def test_scripted_compose_replays_a_validated_layout(make_agent: Any) -> None:
 
 def test_scripted_compose_rejects_invalid_layout(make_agent: Any) -> None:
     agent, _ = make_agent()
-    task = agent.text("Compare", scripted={"compose": {"messages": [COMPOSED, BROKEN]}})
+    task = agent.text("Compare", scripted={"compose": {"messages": [BROKEN]}})
     assert a2ui_messages(task) == []
     assert "recorded layout is invalid" in final_text(task)

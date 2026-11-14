@@ -17,7 +17,12 @@ from google.adk.agents import LlmAgent
 from google.adk.models import BaseLlm, Gemini
 from google.genai import types
 
-from .catalog import WEATHER_CATALOG_ID, catalog_config, weather_catalog
+from .catalog import (
+    MESSAGE_VERSION,
+    WEATHER_CATALOG_ID,
+    catalog_config,
+    weather_catalog,
+)
 from .surfaces import ATTRIBUTION_TEXT
 from .tools import Tool
 
@@ -48,11 +53,12 @@ UI rules:
 
 COMPOSE = f"""- If the request needs a layout no tool provides (for example several cities on
   ONE chart, or a side-by-side comparison), call the tools with show_ui=false to
-  get the data, then compose a new surface yourself as A2UI JSON (version
-  "v0.9.1", catalogId "{WEATHER_CATALOG_ID}", a new unique surfaceId). Use the
-  Chart component for series over days. Put literal values in the components or
-  in an updateDataModel message. Always end the layout with a caption Text
-  "{ATTRIBUTION_TEXT}".
+  get the data, then compose a new surface yourself as A2UI JSON: ONE
+  createSurface message (version "{MESSAGE_VERSION}", catalogId
+  "{WEATHER_CATALOG_ID}", a new unique surfaceId) carrying the components and,
+  if they bind to it, the dataModel. Use the Chart component for series over
+  days. Write headings as Markdown in a Text ("## Title"). Always end the
+  layout with a caption Text "{ATTRIBUTION_TEXT}".
 """
 
 ROLE = TOOLS + COMPOSE
@@ -60,9 +66,10 @@ ROLE = TOOLS + COMPOSE
 AGUI_RULES = """- Show a composed layout by calling compose_ui with the JSON array of A2UI
   messages as a2ui_json; never write A2UI JSON in your reply. If compose_ui
   returns an error, fix the layout and call it again.
-- A message starting with "[UI action]" reports a click on a surface you showed.
+- A message starting with "A2UI user action:" reports a click on a surface you
+  showed.
   Answer it with the matching tool call, passing the place_id, days and units
-  from its context and surface_id set to that surface, so the surface is redrawn
+  from its context and surface_id set to its surfaceId, so the surface is redrawn
   in place: "pick_place" calls get_forecast if its context says then=forecast,
   get_weather otherwise; "set_forecast" calls get_forecast. Then reply with at
   most one short sentence.
