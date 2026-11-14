@@ -124,3 +124,24 @@
   first S5 layout failed catalog validation in 2 of 3 measured runs; one
   retry fixed it each time. The earlier "3 LLM calls vs 2 in the recording"
   was this retry. S5 first render is now 30 to 41 s (median 35 s).
+
+## A2UI 1.0 (2026-11-14)
+
+- Python: the installed a2ui-agent-sdk 0.10 / a2ui-core 0.5 already ship
+  `a2ui.builder.v1_0`, the 1.0 schemas and validator; 0.11 / 0.6 are blocked
+  by `ag_ui_adk` (0.12 and 0.13 cap them). `a2ui-a2a` 0.3 needs sdk > 0.10.
+- `catalogId` is optional in a 1.0 `createSurface`, so a bare one is valid:
+  the "invalid compose" test needed a really invalid layout.
+- The 1.0 basic `Text` lost `h1`-`h5`: headings are Markdown, through
+  `formatString` for bound values (`## ${/place}`).
+- With two copies of `@a2ui/web_core` 0.15 in the bundle (caused by
+  `@a2ui/markdown-it`'s stale `^0.14` peer), every container rendered an
+  empty child and nothing was logged: `renderNode` did not recognize a node
+  built by the other copy and looked up its internal id (`a2ui-n42`) as a
+  component id. npm overrides cannot change a peer range; the package was
+  inlined.
+- The harness's first-render signal waited for `updateComponents` /
+  `updateDataModel`; an inline `createSurface` now counts too.
+- `@ag-ui/a2ui-middleware` 0.0.16 turns a click into a hidden user message
+  (`A2UI user action:\n{json}`), which `ag_ui_adk` passes through: the
+  click-rewriting shim was removed.

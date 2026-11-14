@@ -82,10 +82,11 @@ sequenceDiagram
 
 ## A2UI: the agent describes the UI
 
-The agent sends declarative JSON messages (`createSurface`,
-`updateComponents`, `updateDataModel`) as A2A DataParts. The client renders
-them with its own trusted component catalog and sends user actions back as
-A2A messages.
+The agent sends declarative JSON messages (A2UI 1.0) as A2A DataParts: a new
+surface is one `createSurface` carrying its components and data model, and an
+existing one changes with `updateComponents` and `updateDataModel`. The
+client renders them with its own trusted component catalog and sends user
+actions back as A2A messages.
 
 ```mermaid
 sequenceDiagram
@@ -95,10 +96,10 @@ sequenceDiagram
   participant A as ADK agent (A2A executor)
   participant T as Tools (core)
   U->>C: "Weather in Springfield"
-  C->>A: message/stream (X-A2A-Extensions: a2ui v0.9.1)
+  C->>A: message/stream (X-A2A-Extensions: a2ui v1.0)
   A->>T: get_weather {city}
   T-->>A: Resolution (5 candidates)
-  A-->>C: createSurface, updateComponents (Buttons with actions)
+  A-->>C: createSurface {components: Buttons with actions}
   C-->>U: picker (rendered from the client's catalog)
   U->>C: click "Illinois"
   C->>A: message/stream {action: pick_place, context: {placeId}}
@@ -140,9 +141,8 @@ sequenceDiagram
   C-->>U: picker (same catalog)
   U->>C: click "Illinois"
   C->>R: POST run, forwardedProps.a2uiAction
-  R->>A: + synthetic log_a2ui_event call and result
-  Note over A: shim: the pair becomes a user message<br/>(ag_ui_adk 0.12 drops it otherwise)
-  A->>M: "[UI action] User performed action pick_place ..."
+  R->>A: + hidden user message "A2UI user action: {...}"
+  A->>M: "A2UI user action: {name: pick_place, surfaceId, context}"
   M-->>A: call get_weather {place_id, surface_id: picker-1}
   A-->>R: TOOL_CALL_RESULT (picker redrawn in place)
   R-->>C: ACTIVITY_SNAPSHOT
@@ -154,11 +154,12 @@ sequenceDiagram
 - **A composed layout (S5) goes through a `compose_ui` tool**: the middleware
   does not read A2UI written in a text reply. Validation errors come back as
   tool errors, and the model retries within the same run.
-- **A click is a turn of the model**: the middleware sends it as a synthetic
-  `log_a2ui_event` tool call; the model answers with a tool call carrying the
-  surface id to redraw. `ag_ui_adk` 0.12 skips that pair ("no matching pending
-  tool calls"), so an ASGI shim rewrites it as a user message with the same
-  text.
+- **A click is a turn of the model**: the middleware (0.0.16) adds it to the
+  history as a user message, `A2UI user action:` followed by the action JSON,
+  and hides it from the events it streams back; the model answers with a tool
+  call carrying the surface id to redraw. (0.0.14 sent a synthetic
+  `log_a2ui_event` tool call instead, which `ag_ui_adk` dropped, and needed a
+  shim.)
 - **The middleware needs Node** (it imports `crypto`), so the browser talks
   to a relay in the compare server (`compare/server/agui.ts`), the role a
   CopilotKit runtime plays in a real deployment. The relay adds the run's LLM
