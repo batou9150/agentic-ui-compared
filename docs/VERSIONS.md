@@ -172,6 +172,9 @@ None of these break the plan; they change how it is implemented.
       the synthetic `log_a2ui_event` pair; `ag_ui_adk` passes it to the model
       as is, so the request shim no longer rewrites anything (it still opens
       the per-run usage record).
-    - The S5 recording held only literal values; its createSurface and
-      updateComponents were merged into one 1.0 createSurface, components
-      unchanged (noted in the file).
+    - S5 was re-recorded in a Live run with the 1.0 prompt: Gemini composed
+      one createSurface with its components inline and a Markdown heading,
+      valid on the first try. `record_s5.py --rebind` now also reads series
+      labelled "Paris Max" (the model dropped the parentheses this time).
+    - Live measurements skip the split pass (`A2UI_CREATE=split`): it only
+      changes bytes, which Scripted mode measures exactly.

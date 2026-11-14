@@ -38,23 +38,23 @@ Measured on 2026-11-14 (scripted mode, median of 10 runs after one warm-up; Darw
 
 | Scenario | Side | Network | UI payload | Round trips | Host-view messages | First render (p10-p90) |
 |---|---|---|---|---|---|---|
-| S1 | MCP Apps | 237.0 KB | 235.4 KB | 2 | 7 | 69 ms (58-82) |
-| S1 | A2UI over A2A | 3.1 KB | 1.8 KB | 1 | 0 | 4 ms (3-14) |
-| S1 | A2UI over AG-UI | 6.1 KB | 1.8 KB | 1 | 0 | 20 ms (18-25) |
-| S1 | A2UI over A2A, split createSurface | 3.4 KB | 1.9 KB | 1 | 0 | 4 ms (3-4) |
-| S2 | MCP Apps | 239.0 KB | 236.8 KB | 3 | 12 | 73 ms (57-89) |
-| S2 | A2UI over A2A | 7.3 KB | 4.1 KB | 2 | 0 | 3 ms (3-10) |
-| S2 | A2UI over AG-UI | 17.8 KB | 4.1 KB | 2 | 0 | 19 ms (18-19) |
-| S2 | A2UI over A2A, split createSurface | 7.4 KB | 4.2 KB | 2 | 0 | 4 ms (4-6) |
-| S3 | MCP Apps | 421.3 KB | 416.1 KB | 4 | 15 | 91 ms (84-99) |
-| S3 | A2UI over A2A | 9.4 KB | 4.5 KB | 3 | 0 | 5 ms (4-10) |
-| S3 | A2UI over AG-UI | 33.6 KB | 4.5 KB | 3 | 0 | 23 ms (21-26) |
-| S3 | A2UI over A2A, split createSurface | 9.7 KB | 4.6 KB | 3 | 0 | 5 ms (4-10) |
-| S4 | MCP Apps | 238.4 KB | 236.6 KB | 2 | 6 | 73 ms (57-94) |
-| S4 | A2UI over A2A | 4.4 KB | 2.8 KB | 1 | 0 | 5 ms (4-14) |
-| S4 | A2UI over AG-UI | 8.9 KB | 2.8 KB | 1 | 0 | 19 ms (19-21) |
-| S4 | A2UI over A2A, split createSurface | 4.7 KB | 2.9 KB | 1 | 0 | 4 ms (4-6) |
-| S5 | MCP Apps | 410.8 KB | 407.8 KB | 3 | 12 | 127 ms (102-187) |
-| S5 | A2UI over A2A | 9.4 KB | 1.0 KB | 3 | 0 | 5 ms (3-19) |
-| S5 | A2UI over AG-UI | 34.4 KB | 1.0 KB | 3 | 0 | 17 ms (16-22) |
-| S5 | A2UI over A2A, split createSurface | 9.4 KB | 1.0 KB | 3 | 0 | 4 ms (3-4) |
+| S1 | MCP Apps | 237.0 KB | 235.4 KB | 2 | 7 | 58 ms (57-59) |
+| S1 | A2UI over A2A | 3.1 KB | 1.8 KB | 1 | 0 | 4 ms (3-4) |
+| S1 | A2UI over AG-UI | 6.1 KB | 1.8 KB | 1 | 0 | 19 ms (18-20) |
+| S1 | A2UI over A2A, split createSurface | 3.4 KB | 1.9 KB | 1 | 0 | 3 ms (3-4) |
+| S2 | MCP Apps | 239.0 KB | 236.8 KB | 3 | 12 | 57 ms (56-64) |
+| S2 | A2UI over A2A | 7.3 KB | 4.1 KB | 2 | 0 | 3 ms (3-5) |
+| S2 | A2UI over AG-UI | 17.8 KB | 4.1 KB | 2 | 0 | 19 ms (18-23) |
+| S2 | A2UI over A2A, split createSurface | 7.4 KB | 4.2 KB | 2 | 0 | 3 ms (3-3) |
+| S3 | MCP Apps | 421.3 KB | 416.1 KB | 4 | 15 | 87 ms (86-93) |
+| S3 | A2UI over A2A | 9.4 KB | 4.5 KB | 3 | 0 | 4 ms (3-5) |
+| S3 | A2UI over AG-UI | 33.6 KB | 4.5 KB | 3 | 0 | 22 ms (21-23) |
+| S3 | A2UI over A2A, split createSurface | 9.7 KB | 4.6 KB | 3 | 0 | 4 ms (3-4) |
+| S4 | MCP Apps | 238.4 KB | 236.6 KB | 2 | 6 | 71 ms (57-87) |
+| S4 | A2UI over A2A | 4.4 KB | 2.8 KB | 1 | 0 | 4 ms (3-12) |
+| S4 | A2UI over AG-UI | 8.9 KB | 2.8 KB | 1 | 0 | 20 ms (19-21) |
+| S4 | A2UI over A2A, split createSurface | 4.7 KB | 2.9 KB | 1 | 0 | 4 ms (3-4) |
+| S5 | MCP Apps | 410.8 KB | 407.8 KB | 3 | 12 | 104 ms (99-110) |
+| S5 | A2UI over A2A | 9.0 KB | 1.0 KB | 3 | 0 | 5 ms (4-6) |
+| S5 | A2UI over AG-UI | 34.3 KB | 1.0 KB | 3 | 0 | 17 ms (17-17) |
+| S5 | A2UI over A2A, split createSurface | 9.0 KB | 1.0 KB | 3 | 0 | 3 ms (2-3) |

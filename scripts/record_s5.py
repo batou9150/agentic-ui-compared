@@ -32,7 +32,8 @@ PROMPT = "Compare Paris and Tokyo over the next 7 days on one chart"
 DESIGNED = ("weather-", "forecast-", "picker-", "clock-")  # surfaces built by tools
 EXTENSION = get_a2ui_extension_uri(A2UI_VERSION)
 SCRIPTED_NOW = datetime(2026, 10, 4, 12, tzinfo=UTC)  # WEATHER_FIXED_NOW in compare.sh
-SERIES = re.compile(r"^(?P<city>.+?) \((?P<kind>Max|Min)\b")  # e.g. "Paris (Max)"
+# e.g. "Paris (Max)" or "Paris Max", as the model names its series
+SERIES = re.compile(r"^(?P<city>.+?) \(?(?P<kind>Max|Min)\b")
 
 
 def is_composed(message: dict[str, Any]) -> bool:

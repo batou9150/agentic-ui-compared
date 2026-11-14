@@ -183,6 +183,8 @@ PASSES = [
 
 def browser_runs(mode: str, runs: int) -> None:
     for env in PASSES:
+        if mode == "live" and env["A2UI_CREATE"] == "split":
+            continue  # a byte difference, measured exactly in Scripted mode
         run(
             ["npx", "playwright", "test", "-c", "measure/playwright.config.ts"],
             cwd=ROOT / "scenarios",
@@ -201,7 +203,7 @@ def raw_rows(mode: str) -> list[dict[str, Any]]:
     if agui.exists():
         rows += json.loads(agui.read_text())
     split = RAW / f"runs-{mode}-split.json"
-    if split.exists():
+    if mode != "live" and split.exists():
         rows += [{**r, "create": "split"} for r in json.loads(split.read_text())]
     return rows
 

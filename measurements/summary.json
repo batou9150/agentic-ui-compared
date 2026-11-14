@@ -134,20 +134,16 @@
         "networkBytes": 242693.0,
         "uiBytes": 241038.0,
         "bridgeMessages": 7.0,
-        "bridgeMessages_range": [
-          7,
-          8
-        ],
         "roundTrips": 2.0,
-        "firstRenderMs": 69.25,
+        "firstRenderMs": 58.25,
         "firstRenderMs_p10_p90": [
-          58.260000000000005,
-          82.07000000000001
+          56.64,
+          59.02
         ],
-        "totalMs": 37.9,
+        "totalMs": 34.8,
         "totalMs_p10_p90": [
-          34.269999999999996,
-          49.26
+          33.989999999999995,
+          36.449999999999996
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -160,15 +156,15 @@
         "uiBytes": 1824.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 4.25,
+        "firstRenderMs": 3.5,
         "firstRenderMs_p10_p90": [
-          3.47,
-          13.52
+          3.1900000000000004,
+          3.7999999999999994
         ],
-        "totalMs": 6.6,
+        "totalMs": 5.35,
         "totalMs_p10_p90": [
-          5.26,
-          17.94
+          5.29,
+          6.220000000000001
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -181,15 +177,15 @@
         "uiBytes": 1824.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 19.7,
+        "firstRenderMs": 18.700000000000003,
         "firstRenderMs_p10_p90": [
           17.97,
-          25.229999999999997
+          19.830000000000002
         ],
-        "totalMs": 23.1,
+        "totalMs": 19.45,
         "totalMs_p10_p90": [
-          19.689999999999998,
-          31.800000000000004
+          18.689999999999998,
+          20.62
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -202,15 +198,15 @@
         "uiBytes": 1954.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 3.6,
+        "firstRenderMs": 3.3499999999999996,
         "firstRenderMs_p10_p90": [
-          3.28,
-          4.16
+          3.0,
+          3.7399999999999998
         ],
-        "totalMs": 5.65,
+        "totalMs": 5.25,
         "totalMs_p10_p90": [
-          5.180000000000001,
-          6.529999999999999
+          4.87,
+          6.04
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -225,15 +221,15 @@
         "uiBytes": 242526.0,
         "bridgeMessages": 12.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 72.85,
+        "firstRenderMs": 57.1,
         "firstRenderMs_p10_p90": [
-          56.86,
-          88.72999999999999
+          56.339999999999996,
+          64.25
         ],
-        "totalMs": 37.9,
+        "totalMs": 36.0,
         "totalMs_p10_p90": [
-          36.64,
-          55.83
+          34.07000000000001,
+          42.3
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -246,15 +242,15 @@
         "uiBytes": 4199.0,
         "bridgeMessages": 0.0,
         "roundTrips": 2.0,
-        "firstRenderMs": 3.3499999999999996,
+        "firstRenderMs": 3.1500000000000004,
         "firstRenderMs_p10_p90": [
-          3.0,
-          9.77
+          2.88,
+          5.2
         ],
-        "totalMs": 5.1,
+        "totalMs": 4.75,
         "totalMs_p10_p90": [
-          4.59,
-          11.470000000000002
+          4.380000000000001,
+          7.339999999999999
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -269,13 +265,13 @@
         "roundTrips": 2.0,
         "firstRenderMs": 18.6,
         "firstRenderMs_p10_p90": [
-          17.990000000000002,
-          19.05
+          18.189999999999998,
+          23.440000000000005
         ],
-        "totalMs": 19.9,
+        "totalMs": 19.7,
         "totalMs_p10_p90": [
-          18.78,
-          24.6
+          19.080000000000002,
+          25.11
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -288,15 +284,15 @@
         "uiBytes": 4260.0,
         "bridgeMessages": 0.0,
         "roundTrips": 2.0,
-        "firstRenderMs": 4.199999999999999,
+        "firstRenderMs": 3.0,
         "firstRenderMs_p10_p90": [
-          3.6800000000000006,
-          5.750000000000001
+          2.8,
+          3.31
         ],
-        "totalMs": 5.95,
+        "totalMs": 4.45,
         "totalMs_p10_p90": [
-          5.26,
-          7.460000000000001
+          4.36,
+          5.0
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -311,15 +307,15 @@
         "uiBytes": 426086.0,
         "bridgeMessages": 15.0,
         "roundTrips": 4.0,
-        "firstRenderMs": 91.2,
+        "firstRenderMs": 87.0,
         "firstRenderMs_p10_p90": [
-          84.47,
-          98.76
+          85.84,
+          93.12
         ],
-        "totalMs": 52.75,
+        "totalMs": 49.8,
         "totalMs_p10_p90": [
-          49.739999999999995,
-          56.58
+          47.46,
+          57.21
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -332,15 +328,15 @@
         "uiBytes": 4627.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 5.199999999999999,
+        "firstRenderMs": 3.75,
         "firstRenderMs_p10_p90": [
-          4.35,
-          9.93
+          3.38,
+          4.98
         ],
-        "totalMs": 10.15,
+        "totalMs": 9.850000000000001,
         "totalMs_p10_p90": [
-          9.55,
-          14.98
+          8.870000000000001,
+          10.42
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -353,15 +349,15 @@
         "uiBytes": 4627.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 22.85,
+        "firstRenderMs": 21.799999999999997,
         "firstRenderMs_p10_p90": [
-          21.270000000000003,
-          25.98
+          21.39,
+          23.04
         ],
-        "totalMs": 23.4,
+        "totalMs": 22.75,
         "totalMs_p10_p90": [
-          21.990000000000002,
-          27.21
+          22.250000000000004,
+          23.779999999999998
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -374,15 +370,15 @@
         "uiBytes": 4759.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 5.25,
+        "firstRenderMs": 3.55,
         "firstRenderMs_p10_p90": [
-          4.29,
-          9.52
+          3.29,
+          4.0
         ],
-        "totalMs": 11.100000000000001,
+        "totalMs": 8.25,
         "totalMs_p10_p90": [
-          9.48,
-          19.22
+          8.059999999999999,
+          8.61
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -397,15 +393,15 @@
         "uiBytes": 242246.0,
         "bridgeMessages": 6.0,
         "roundTrips": 2.0,
-        "firstRenderMs": 72.7,
+        "firstRenderMs": 70.75,
         "firstRenderMs_p10_p90": [
-          57.48,
-          94.35
+          57.38000000000001,
+          87.35999999999999
         ],
-        "totalMs": 43.5,
+        "totalMs": 38.95,
         "totalMs_p10_p90": [
-          37.13,
-          56.52
+          35.10000000000001,
+          56.970000000000006
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -418,15 +414,15 @@
         "uiBytes": 2838.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 4.85,
+        "firstRenderMs": 4.15,
         "firstRenderMs_p10_p90": [
-          3.5699999999999994,
-          13.530000000000001
+          3.4,
+          12.149999999999999
         ],
-        "totalMs": 9.75,
+        "totalMs": 8.15,
         "totalMs_p10_p90": [
-          5.76,
-          16.840000000000003
+          5.4799999999999995,
+          14.91
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -439,15 +435,15 @@
         "uiBytes": 2838.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 19.4,
+        "firstRenderMs": 19.85,
         "firstRenderMs_p10_p90": [
-          18.869999999999997,
-          20.509999999999998
+          19.080000000000002,
+          21.279999999999998
         ],
-        "totalMs": 21.1,
+        "totalMs": 21.35,
         "totalMs_p10_p90": [
-          19.79,
-          21.630000000000003
+          20.4,
+          28.190000000000005
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -460,15 +456,15 @@
         "uiBytes": 2964.0,
         "bridgeMessages": 0.0,
         "roundTrips": 1.0,
-        "firstRenderMs": 4.3,
+        "firstRenderMs": 3.55,
         "firstRenderMs_p10_p90": [
-          3.6900000000000004,
-          5.720000000000001
+          3.3,
+          4.0600000000000005
         ],
-        "totalMs": 6.45,
+        "totalMs": 5.6,
         "totalMs_p10_p90": [
-          5.970000000000001,
-          8.22
+          5.39,
+          6.0600000000000005
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -483,15 +479,15 @@
         "uiBytes": 417601.0,
         "bridgeMessages": 12.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 127.4,
+        "firstRenderMs": 103.85,
         "firstRenderMs_p10_p90": [
-          101.83000000000001,
-          187.20999999999998
+          99.08000000000001,
+          110.14000000000001
         ],
-        "totalMs": 150.35,
+        "totalMs": 111.35,
         "totalMs_p10_p90": [
-          117.17,
-          223.04000000000002
+          106.42,
+          123.10999999999999
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -500,19 +496,19 @@
       },
       "a2ui": {
         "n": 10,
-        "networkBytes": 9625.0,
-        "uiBytes": 1022.0,
+        "networkBytes": 9220.0,
+        "uiBytes": 1050.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
         "firstRenderMs": 5.15,
         "firstRenderMs_p10_p90": [
-          2.79,
-          19.15
+          3.7399999999999998,
+          5.61
         ],
-        "totalMs": 30.25,
+        "totalMs": 26.45,
         "totalMs_p10_p90": [
-          20.44,
-          75.03999999999999
+          24.82,
+          32.64
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -521,19 +517,19 @@
       },
       "a2ui-agui": {
         "n": 10,
-        "networkBytes": 35182.0,
-        "uiBytes": 1022.0,
+        "networkBytes": 35113.0,
+        "uiBytes": 1050.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 17.05,
+        "firstRenderMs": 16.7,
         "firstRenderMs_p10_p90": [
-          16.270000000000003,
-          22.259999999999998
+          16.580000000000002,
+          17.009999999999998
         ],
-        "totalMs": 72.8,
+        "totalMs": 63.15,
         "totalMs_p10_p90": [
-          61.57000000000001,
-          92.4
+          59.260000000000005,
+          71.23
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,
@@ -542,19 +538,19 @@
       },
       "a2ui-split": {
         "n": 10,
-        "networkBytes": 9625.0,
-        "uiBytes": 1022.0,
+        "networkBytes": 9220.0,
+        "uiBytes": 1050.0,
         "bridgeMessages": 0.0,
         "roundTrips": 3.0,
-        "firstRenderMs": 3.6,
+        "firstRenderMs": 2.7,
         "firstRenderMs_p10_p90": [
-          2.6900000000000004,
-          4.17
+          2.3999999999999995,
+          2.9999999999999996
         ],
-        "totalMs": 18.0,
+        "totalMs": 15.2,
         "totalMs_p10_p90": [
-          14.95,
-          22.1
+          14.570000000000002,
+          16.11
         ],
         "llmCalls": 0.0,
         "inputTokens": 0.0,

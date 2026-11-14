@@ -145,3 +145,7 @@
 - `@ag-ui/a2ui-middleware` 0.0.16 turns a click into a hidden user message
   (`A2UI user action:\n{json}`), which `ag_ui_adk` passes through: the
   click-rewriting shim was removed.
+- Live, 1.0 prompt (2026-11-14, 3 runs): A2UI input tokens +5% per scenario
+  (S1 over A2A 17.7 K vs 16.8 K); no compose retry. The re-recorded S5 is a
+  single createSurface with a Markdown heading, written that way by Gemini
+  from the prompt and catalog alone.
