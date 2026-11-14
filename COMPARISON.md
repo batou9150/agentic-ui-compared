@@ -1,10 +1,11 @@
 # MCP Apps vs A2UI: a measured comparison
 
-*Snapshot of 2026-10-04, dependencies and Scripted measurements refreshed on
-2026-11-06, Live measurements re-run the same day. MCP Apps spec `2026-01-26`
-(stable) with `@modelcontextprotocol/ext-apps` 2.0.3 and `mcp` 2.3.0
-(Python). A2UI spec v0.9.1 with `a2ui-agent-sdk` 0.10.0, `@a2ui/lit` 0.12.0
-and `google-adk` 2.13.0. Exact pins in [docs/VERSIONS.md](docs/VERSIONS.md).*
+*Snapshot of 2026-10-04, dependencies refreshed on 2026-11-06, A2UI side
+moved to the released A2UI 1.0 spec on 2026-11-14, with Scripted and Live
+measurements, the S5 recording and the GIFs redone that day. MCP Apps spec
+`2026-01-26` (stable) with `@modelcontextprotocol/ext-apps` 2.0.3 and `mcp`
+2.3.0 (Python). A2UI spec 1.0 with `a2ui-agent-sdk` 0.10.0, `@a2ui/lit` 0.15.0 and `google-adk` 2.13.0.
+Exact pins in [docs/VERSIONS.md](docs/VERSIONS.md).*
 
 The same weather app was built twice on a shared domain package (`core/`), then
 both versions were run side by side with identical inputs in a test harness.
@@ -19,7 +20,7 @@ winner: the two approaches answer different questions.
   has.
 - **The network cost follows.** Per scenario, MCP Apps moved 237 to 421 KB
   (the self-contained views, about 61 KB each once gzipped) against 3 to
-  10 KB for A2UI. The A2UI rendering code (788 KB raw, 231 KB gzip) is part
+  10 KB for A2UI. The A2UI rendering code (952 KB raw, 281 KB gzip) is part
   of the client app instead, loaded once.
 - **Layout ownership differs.** In MCP Apps the developer owns every pixel of
   the view and the host owns the frame around it; in A2UI the client owns
@@ -30,19 +31,28 @@ winner: the two approaches answer different questions.
   with its own UI: Claude Desktop drew the two-city chart natively, see
   Findings); the A2UI agent can compose
   a new two-city chart, at the price of a large schema in every prompt
-  (about 8 K input tokens per LLM call in Live mode, against under 1 K on
-  the MCP side), a slow composition (35 to 50 s for the S5 chart with
+  (about 9 K input tokens per LLM call in Live mode, against under 1 K on
+  the MCP side), a slow composition (30 to 50 s for the S5 chart with
   Gemini) and output that has to be validated (it failed validation once in
-  2 of 3 runs on 2026-10-05, in none of 6 on 2026-11-06), and checked for
-  correctness.
+  2 of 3 runs on 2026-10-05, in none of 6 on 2026-11-06 nor of 6 on
+  2026-11-14), and checked for correctness.
 - **Interactivity costs about the same.** A click in either UI is one round
   trip to the backend with no LLM call; MCP Apps adds a few local
   host-to-view messages, A2UI can update data without touching the layout.
 - **AG-UI is a transport, measured as one.** The same A2UI agent run over
   AG-UI, with its conventions and middleware, renders the same pixels but
   moves 2 to 4 times the bytes, adds a Node hop and, because a click becomes
-  a model turn, costs two LLM calls and about 22 K input tokens per click.
-  With `ag_ui_adk` 0.12, clicks also needed a shim to reach the model at all.
+  a model turn, costs two LLM calls and about 22 to 25 K input tokens per
+  click.
+  Until `@ag-ui/a2ui-middleware` 0.0.16, clicks also needed a shim to reach
+  an ADK model at all.
+- **A2UI 1.0 shaves a little, not a lot.** A new surface is now one
+  `createSurface` carrying its layout and data instead of three messages:
+  0.1 to 0.3 KB less per scenario (2 to 7%), no measurable render-time
+  difference. The upgrade cost more elsewhere: no heading variants on `Text`
+  any more, a larger renderer (+21% raw) and prompt (+10% characters, +5%
+  input tokens per scenario in Live mode), and a stale peer
+  range in `@a2ui/markdown-it` that silently broke rendering.
 
 ## Side by side
 
@@ -52,7 +62,7 @@ open. Reproduce with `make gifs`.
 
 **S1: current weather card.** One tool call, one designed card on each side.
 Left: the host reads the `ui://` view and passes it the result. Right: the
-agent sends `createSurface`, `updateComponents` and `updateDataModel`.
+agent sends one A2UI 1.0 `createSurface` carrying the layout and the data.
 
 ![S1 side by side](docs/media/S1.gif)
 
@@ -94,7 +104,7 @@ the S5 finding below, kept on purpose.
 | Who renders | The view itself, in a sandboxed iframe of the host | The client, with its own component catalog |
 | Rendering code lives | On the server, shipped per view, per session | In the client app, shipped once |
 | Security boundary | Iframe sandbox on a separate origin + CSP from `_meta.ui.csp` | No code crosses: only catalog components can appear |
-| Look and feel | View's CSS, adapted with host CSS variables | Client's CSS variables, agent can only hint (`primaryColor`) |
+| Look and feel | View's CSS, adapted with host CSS variables | Client's CSS variables only (1.0 removed the agent's theme hints) |
 | Layout owner | View developer | Surface developer, or the LLM for composed surfaces |
 | Off-script request | Text, the closest designed view, or the host's own UI if it has one | The LLM composes a new surface from the catalog |
 | Custom widgets (chart, clock) | Any library inside the view | Add them to a custom catalog, on agent and client |
@@ -117,7 +127,7 @@ both sides (data applied, then two animation frames). Lines of code exclude
 blank and comment-only lines, generated files and the shared `core/`.
 
 <!-- measurements:start -->
-Measured on 2026-11-06 (scripted mode, median of 10 runs after one warm-up; Darwin arm64, Node v25.4.0, Python 3.14.8). Reproduce with `make measure`.
+Measured on 2026-11-14 (scripted mode, median of 10 runs after one warm-up; Darwin arm64, Node v25.4.0, Python 3.14.8). Reproduce with `make measure`.
 
 **UI code size** (lines of code, blank and comment-only lines excluded; core/ is shared and not counted)
 
@@ -126,14 +136,14 @@ Measured on 2026-11-06 (scripted mode, median of 10 runs after one warm-up; Darw
 | MCP Apps | UI (ui:// views, TS + CSS + HTML) | 679 |
 | MCP Apps | Server (tools, resources, transport) | 215 |
 | **MCP Apps** | **total** | **894** |
-| A2UI | UI (surface builders, catalog: Python + TS custom components) | 545 |
-| A2UI | Agent (tools, prompt, executor, A2A server) | 634 |
-| A2UI | Client app (A2A connection, chat shell) | 309 |
-| **A2UI** | **total** | **1488** |
-| A2UI over AG-UI (added to the A2UI side, same agent and renderer) | Agent (AG-UI endpoint, tool envelopes, click shim, replay model) | 303 |
+| A2UI | UI (surface builders, catalog: Python + TS custom components) | 591 |
+| A2UI | Agent (tools, prompt, executor, A2A server) | 641 |
+| A2UI | Client app (A2A connection, chat shell, Markdown for Text) | 333 |
+| **A2UI** | **total** | **1565** |
+| A2UI over AG-UI (added to the A2UI side, same agent and renderer) | Agent (AG-UI endpoint, tool envelopes, run tracking, replay model) | 259 |
 | A2UI over AG-UI (added to the A2UI side, same agent and renderer) | Client (AG-UI connection) | 137 |
 | A2UI over AG-UI (added to the A2UI side, same agent and renderer) | Relay (Node hop running @ag-ui/a2ui-middleware) | 73 |
-| **A2UI over AG-UI (added to the A2UI side, same agent and renderer)** | **total** | **513** |
+| **A2UI over AG-UI (added to the A2UI side, same agent and renderer)** | **total** | **469** |
 | Harness only (not product code) | Minimal MCP Apps host (what a real host provides) | 411 |
 | **Harness only (not product code)** | **total** | **411** |
 
@@ -144,30 +154,35 @@ Measured on 2026-11-06 (scripted mode, median of 10 runs after one warm-up; Darw
 | MCP Apps view `current.html` (self-contained, sent per session) | 234.5 KB | 60.9 KB |
 | MCP Apps view `forecast.html` (self-contained, sent per session) | 402.4 KB | 118.2 KB |
 | MCP Apps view `world-clock.html` (self-contained, sent per session) | 234.1 KB | 60.8 KB |
-| A2UI client bundle (renderer + catalog + A2A client, loaded once) | 788.4 KB | 232.3 KB |
-| AG-UI client add-on (AG-UI connection + @ag-ui/client, on top of the A2UI client) | 332.9 KB | 76.1 KB |
-| A2UI system prompt with the catalog schema (Live mode, every LLM call) | 28,608 chars | |
-| Same, AG-UI variant (compose_ui and UI action rules, no reply-format rules) | 28,342 chars | |
+| A2UI client bundle (renderer + catalog + A2A client, loaded once) | 952.0 KB | 281.0 KB |
+| AG-UI client add-on (AG-UI connection + @ag-ui/client, on top of the A2UI client) | 384.6 KB | 86.1 KB |
+| A2UI system prompt with the catalog schema (Live mode, every LLM call) | 31,363 chars | |
+| Same, AG-UI variant (compose_ui and UI action rules, no reply-format rules) | 31,106 chars | |
 
 **Per scenario** (network = bytes on the wire between UI and backend, JSON bodies; UI payload = ui:// HTML + view data for MCP Apps, A2UI messages for A2UI; first render = from the prompt to the requested information painted)
 
 | Scenario | Side | Network | UI payload | Round trips | Host-view messages | First render (p10-p90) |
 |---|---|---|---|---|---|---|
-| S1 | MCP Apps | 237.0 KB | 235.4 KB | 2 | 7 | 59 ms (58-59) |
-| S1 | A2UI over A2A | 3.3 KB | 1.8 KB | 1 | 0 | 3 ms (3-3) |
-| S1 | A2UI over AG-UI | 6.2 KB | 1.8 KB | 1 | 0 | 18 ms (18-19) |
-| S2 | MCP Apps | 239.0 KB | 236.8 KB | 3 | 12 | 57 ms (56-60) |
-| S2 | A2UI over A2A | 7.3 KB | 4.0 KB | 2 | 0 | 3 ms (3-3) |
-| S2 | A2UI over AG-UI | 17.7 KB | 4.0 KB | 2 | 0 | 18 ms (18-19) |
-| S3 | MCP Apps | 421.3 KB | 416.1 KB | 4 | 15 | 88 ms (86-89) |
-| S3 | A2UI over A2A | 9.7 KB | 4.6 KB | 3 | 0 | 3 ms (3-3) |
-| S3 | A2UI over AG-UI | 34.1 KB | 4.6 KB | 3 | 0 | 22 ms (21-23) |
-| S4 | MCP Apps | 238.4 KB | 236.6 KB | 2 | 6 | 65 ms (57-74) |
-| S4 | A2UI over A2A | 4.6 KB | 2.8 KB | 1 | 0 | 4 ms (3-5) |
-| S4 | A2UI over AG-UI | 8.9 KB | 2.8 KB | 1 | 0 | 19 ms (18-20) |
-| S5 | MCP Apps | 410.8 KB | 407.8 KB | 3 | 12 | 107 ms (104-111) |
-| S5 | A2UI over A2A | 9.3 KB | 1.1 KB | 3 | 0 | 5 ms (4-6) |
-| S5 | A2UI over AG-UI | 34.5 KB | 1.1 KB | 3 | 0 | 17 ms (17-18) |
+| S1 | MCP Apps | 237.0 KB | 235.4 KB | 2 | 7 | 58 ms (57-59) |
+| S1 | A2UI over A2A | 3.1 KB | 1.8 KB | 1 | 0 | 4 ms (3-4) |
+| S1 | A2UI over AG-UI | 6.1 KB | 1.8 KB | 1 | 0 | 19 ms (18-20) |
+| S1 | A2UI over A2A, split createSurface | 3.4 KB | 1.9 KB | 1 | 0 | 3 ms (3-4) |
+| S2 | MCP Apps | 239.0 KB | 236.8 KB | 3 | 12 | 57 ms (56-64) |
+| S2 | A2UI over A2A | 7.3 KB | 4.1 KB | 2 | 0 | 3 ms (3-5) |
+| S2 | A2UI over AG-UI | 17.8 KB | 4.1 KB | 2 | 0 | 19 ms (18-23) |
+| S2 | A2UI over A2A, split createSurface | 7.4 KB | 4.2 KB | 2 | 0 | 3 ms (3-3) |
+| S3 | MCP Apps | 421.3 KB | 416.1 KB | 4 | 15 | 87 ms (86-93) |
+| S3 | A2UI over A2A | 9.4 KB | 4.5 KB | 3 | 0 | 4 ms (3-5) |
+| S3 | A2UI over AG-UI | 33.6 KB | 4.5 KB | 3 | 0 | 22 ms (21-23) |
+| S3 | A2UI over A2A, split createSurface | 9.7 KB | 4.6 KB | 3 | 0 | 4 ms (3-4) |
+| S4 | MCP Apps | 238.4 KB | 236.6 KB | 2 | 6 | 71 ms (57-87) |
+| S4 | A2UI over A2A | 4.4 KB | 2.8 KB | 1 | 0 | 4 ms (3-12) |
+| S4 | A2UI over AG-UI | 8.9 KB | 2.8 KB | 1 | 0 | 20 ms (19-21) |
+| S4 | A2UI over A2A, split createSurface | 4.7 KB | 2.9 KB | 1 | 0 | 4 ms (3-4) |
+| S5 | MCP Apps | 410.8 KB | 407.8 KB | 3 | 12 | 104 ms (99-110) |
+| S5 | A2UI over A2A | 9.0 KB | 1.0 KB | 3 | 0 | 5 ms (4-6) |
+| S5 | A2UI over AG-UI | 34.3 KB | 1.0 KB | 3 | 0 | 17 ms (17-17) |
+| S5 | A2UI over A2A, split createSurface | 9.0 KB | 1.0 KB | 3 | 0 | 3 ms (2-3) |
 <!-- measurements:end -->
 
 How to read them:
@@ -221,8 +236,8 @@ How to read them:
   the cloud, not from this machine), ChatGPT, VS Code, Goose and other MCP
   Apps hosts. No compatibility with them is claimed.
 - A2UI surfaces were tested with the official Lit renderer (`@a2ui/lit`
-  0.12.0) in this repo's client and harness. Not tested: the Angular and
-  React renderers, the ADK dev UI (which renders A2UI v0.8, not v0.9.1).
+  0.15.0) in this repo's client and harness. Not tested: the Angular and
+  React renderers, the ADK dev UI (which renders A2UI v0.8, not 1.0).
 
 ### Security model
 
@@ -255,8 +270,9 @@ Toggle the theme in the harness: on the left the host pushes its palette
 through `ui/notifications/host-context-changed` and standard CSS variables,
 and the views (written to use them) take the host's look, including its
 purple accent; a view that ignored them would keep its own. On the right the
-client's CSS variables restyle every surface, and the agent has no say beyond
-a `primaryColor` hint. In short: MCP Apps views look like their author unless
+client's CSS variables restyle every surface, and the agent has no say (v0.9
+let it hint a `primaryColor` in `createSurface`; 1.0 removed themes from the
+protocol). In short: MCP Apps views look like their author unless
 they choose to follow the host; A2UI surfaces always look like the client.
 
 ### Who controls layout, and what happens off-script (S5)
@@ -276,12 +292,12 @@ which is why the left side of S5 shows two single-city charts.
 With A2UI the same three layouts are designed surfaces, built by Python code
 from tool results, and the LLM is told to compose a surface itself only when
 none fits. That works, with caveats measured or observed here: the catalog
-schema adds 28 K characters (about 8 K tokens) to every prompt, and
-composing the S5 chart took 35 to 50 s with Gemini against about 5 s for
+schema adds 31 K characters (about 9 K tokens) to every prompt, and
+composing the S5 chart took 30 to 50 s with Gemini against about 5 s for
 the MCP side's first chart (Live results below); composed JSON must be
 validated (the executor validates and retries once, invalid layouts are not
 shown; the first attempt was invalid in 2 of 3 runs on 2026-10-05, valid in
-all runs on 2026-11-06); and
+all runs on 2026-11-06 and 2026-11-14); and
 a valid layout can still be wrong. Open-Meteo returns each city's days from
 its own local "today", so a Paris + Tokyo chart sharing one axis can be off
 by one day, which schema validation cannot catch.
@@ -292,7 +308,7 @@ Both sides re-query on "16 days" and "°F" without a chat message and without
 the LLM. In MCP Apps the view calls `app.callServerTool(...)` and then
 `app.updateModelContext(...)`, about 15 lines in the view, and the host
 relays both. In A2UI the buttons carry an action whose context is bound to
-the data model (`{"path": "/placeId"}`); the agent answers with a single
+the data model (`{"@path": "/placeId"}`); the agent answers with a single
 `updateDataModel` and the chart, bound to the same paths, redraws: about 10
 lines of Python for the action handler, nothing on the client. Two
 differences: in the A2UI basic catalog only `Button` emits actions (no
@@ -310,9 +326,10 @@ because its variant is static.
   real work (sandbox origin, CSP, handshake, resize, theme).
 - *A2UI*: the Python SDK is rich (typed builder, validation, prompt
   generator, A2A helpers) and the protocol is easy to read in a log.
-  Friction: three spec versions in circulation (the codelab and ADK web use
-  v0.8, the samples v0.9, the SDK supports 1.0), sample code still sending
-  v0.8 names, a separate Markdown package needed for `Text`, zod 3 under the
+  Friction: several spec versions in circulation (the codelab and ADK web
+  use v0.8, the samples v0.9, 1.0 is now released), sample code still sending
+  v0.8 names, a separate Markdown package needed for `Text` (whose stale peer
+  range broke the 1.0 upgrade, see the A2UI 1.0 section), zod 3 under the
   hood, a superset catalog to declare twice for any custom component, and
   shadow DOM vs light DOM differences between custom and basic components.
 
@@ -330,48 +347,50 @@ third-party host would compare two LLM stacks. The harness removes that:
   in place of a host's LLM.
 
 **Live mode results** (`make measure ARGS="--mode live --runs 3"`, live
-Open-Meteo data, so the numbers vary more than in Scripted mode):
+Open-Meteo data, so the numbers vary more than in Scripted mode). Measured
+on 2026-11-14 with A2UI 1.0; next to the v0.9.1 run of 2026-11-06, A2UI input
+tokens are about 5% higher (the 1.0 catalog schema in the prompt).
 
 <!-- measurements-live:start -->
-Measured on 2026-11-06 (live mode, median of 3 runs after one warm-up; Darwin arm64, Node v25.4.0, Python 3.14.8). Reproduce with `make measure ARGS="--mode live --runs 3"`.
+Measured on 2026-11-14 (live mode, median of 3 runs after one warm-up; Darwin arm64, Node v25.4.0, Python 3.14.8). Reproduce with `make measure ARGS="--mode live --runs 3"`.
 
 **Per scenario** (network = bytes on the wire between UI and backend, JSON bodies; UI payload = ui:// HTML + view data for MCP Apps, A2UI messages for A2UI; first render = from the prompt to the requested information painted)
 
 | Scenario | Side | Network | UI payload | Round trips | Host-view messages | First render (p10-p90) |
 |---|---|---|---|---|---|---|
-| S1 | MCP Apps | 237.0 KB | 235.4 KB | 2 | 8 | 2438 ms (2427-3162) |
-| S1 | A2UI over A2A | 3.5 KB | 1.8 KB | 1 | 0 | 3108 ms (3020-3707) |
-| S1 | A2UI over AG-UI | 6.8 KB | 1.8 KB | 1 | 0 | 2331 ms (2303-3729) |
-| S2 | MCP Apps | 239.0 KB | 236.8 KB | 3 | 13 | 3077 ms (3015-3338) |
-| S2 | A2UI over A2A | 7.4 KB | 4.0 KB | 2 | 0 | 3354 ms (2971-4273) |
-| S2 | A2UI over AG-UI | 20.3 KB | 4.0 KB | 2 | 0 | 3264 ms (3224-4144) |
-| S3 | MCP Apps | 421.7 KB | 416.4 KB | 4 | 15 | 2604 ms (1986-2881) |
-| S3 | A2UI over A2A | 9.5 KB | 4.6 KB | 3 | 0 | 2613 ms (2193-2912) |
-| S3 | A2UI over AG-UI | 38.4 KB | 4.6 KB | 3 | 0 | 2464 ms (2237-3251) |
-| S4 | MCP Apps | 238.4 KB | 236.5 KB | 2 | 8 | 3758 ms (2665-4305) |
-| S4 | A2UI over A2A | 4.6 KB | 2.8 KB | 1 | 0 | 3658 ms (3058-3964) |
-| S4 | A2UI over AG-UI | 9.8 KB | 2.8 KB | 1 | 0 | 3765 ms (3738-4003) |
-| S5 | MCP Apps | 410.8 KB | 407.8 KB | 3 | 12 | 4959 ms (4553-5582) |
-| S5 | A2UI over A2A | 2.5 KB | 1.2 KB | 1 | 0 | 47337 ms (36243-51155) |
-| S5 | A2UI over AG-UI | 39.2 KB | 1.1 KB | 1 | 0 | 37580 ms (31820-38539) |
+| S1 | MCP Apps | 237.0 KB | 235.4 KB | 2 | 7 | 2218 ms (2126-2276) |
+| S1 | A2UI over A2A | 3.4 KB | 1.8 KB | 1 | 0 | 2583 ms (2563-2892) |
+| S1 | A2UI over AG-UI | 6.7 KB | 1.8 KB | 1 | 0 | 2614 ms (2493-3253) |
+| S2 | MCP Apps | 239.0 KB | 236.8 KB | 3 | 12 | 2386 ms (2355-2468) |
+| S2 | A2UI over A2A | 7.4 KB | 4.1 KB | 2 | 0 | 2388 ms (2359-2718) |
+| S2 | A2UI over AG-UI | 20.4 KB | 4.1 KB | 2 | 0 | 2081 ms (2027-2226) |
+| S3 | MCP Apps | 421.9 KB | 416.5 KB | 4 | 15 | 1927 ms (1879-2490) |
+| S3 | A2UI over A2A | 9.3 KB | 4.6 KB | 3 | 0 | 2919 ms (2281-3010) |
+| S3 | A2UI over AG-UI | 37.7 KB | 4.6 KB | 3 | 0 | 1831 ms (1670-2404) |
+| S4 | MCP Apps | 238.5 KB | 236.6 KB | 2 | 7 | 2259 ms (1827-2990) |
+| S4 | A2UI over A2A | 4.5 KB | 2.8 KB | 1 | 0 | 3261 ms (3164-6933) |
+| S4 | A2UI over AG-UI | 10.0 KB | 2.8 KB | 1 | 0 | 3664 ms (3518-3731) |
+| S5 | MCP Apps | 410.8 KB | 407.9 KB | 3 | 12 | 4544 ms (4525-4864) |
+| S5 | A2UI over A2A | 2.3 KB | 1.0 KB | 1 | 0 | 39705 ms (39293-40149) |
+| S5 | A2UI over AG-UI | 33.2 KB | 1.0 KB | 1 | 0 | 28494 ms (26976-37814) |
 
 | Scenario | Side | LLM calls | Input tokens | Output tokens | Compose retries |
 |---|---|---|---|---|---|
-| S1 | MCP Apps | 2 | 1682 | 27 | n/a |
-| S1 | A2UI over A2A | 2 | 16759 | 27 | 0 |
-| S1 | A2UI over AG-UI | 2 | 17958 | 27 | 0 |
-| S2 | MCP Apps | 2 | 1736 | 31 | n/a |
-| S2 | A2UI over A2A | 2 | 16807 | 32 | 0 |
-| S2 | A2UI over AG-UI | 4 | 38697 | 78 | 0 |
-| S3 | MCP Apps | 2 | 1892 | 28 | n/a |
-| S3 | A2UI over A2A | 2 | 16976 | 28 | 0 |
-| S3 | A2UI over AG-UI | 6 | 65626 | 135 | 0 |
-| S4 | MCP Apps | 2 | 1851 | 45 | n/a |
-| S4 | A2UI over A2A | 2 | 16855 | 44 | 0 |
-| S4 | A2UI over AG-UI | 2 | 18528 | 45 | 0 |
-| S5 | MCP Apps | 2 | 2618 | 54 | n/a |
-| S5 | A2UI over A2A | 3 | 33510 | 847 | 0 |
-| S5 | A2UI over AG-UI | 4 | 53924 | 546 | 0 |
+| S1 | MCP Apps | 2 | 1698 | 27 | n/a |
+| S1 | A2UI over A2A | 2 | 17675 | 27 | 0 |
+| S1 | A2UI over AG-UI | 2 | 18837 | 27 | 0 |
+| S2 | MCP Apps | 2 | 1738 | 32 | n/a |
+| S2 | A2UI over A2A | 2 | 17683 | 30 | 0 |
+| S2 | A2UI over AG-UI | 4 | 40416 | 81 | 0 |
+| S3 | MCP Apps | 2 | 1910 | 28 | n/a |
+| S3 | A2UI over A2A | 2 | 17941 | 28 | 0 |
+| S3 | A2UI over AG-UI | 6 | 68244 | 137 | 0 |
+| S4 | MCP Apps | 2 | 1858 | 45 | n/a |
+| S4 | A2UI over A2A | 2 | 17813 | 45 | 0 |
+| S4 | A2UI over AG-UI | 2 | 19456 | 45 | 0 |
+| S5 | MCP Apps | 2 | 2596 | 54 | n/a |
+| S5 | A2UI over A2A | 3 | 35322 | 758 | 0 |
+| S5 | A2UI over AG-UI | 4 | 54279 | 718 | 0 |
 <!-- measurements-live:end -->
 
 How to read them:
@@ -382,20 +401,22 @@ How to read them:
   call ends. The protocol differences of the Scripted table (tens of ms) are
   lost in that noise.
 - **Tokens differ by an order of magnitude.** Each A2UI call carries the
-  catalog schema and composition rules (about 8 K input tokens, paid even
+  catalog schema and composition rules (about 9 K input tokens, paid even
   when a designed surface is used, because the model must be able to compose
   at any turn); the MCP side's loop only sends tool definitions. Caveat: a
   real MCP host has its own, much larger system prompt; what is compared here
   is what each approach adds.
 - **S5 is the expensive case.** The A2UI agent fetched both forecasts, then
-  generated about 0.8 K output tokens of A2UI JSON: 36 to 51 s before
-  anything is painted over A2A (median 47 s; 35 s on 2026-10-05), against
+  generated about 0.8 K output tokens of A2UI JSON: 39 to 40 s before
+  anything is painted over A2A (median 40 s; 47 s on 2026-11-06, 35 s on
+  2026-10-05), against
   about 5 s for the first MCP chart (which then shows only one city per
   chart). Over AG-UI, see the transport section below.
 - **Composed layouts can fail validation.** On 2026-10-05, in 2 of the 3
   measured S5 runs the first layout Gemini wrote was rejected by the catalog
   schema and the agent asked once more; every retry was valid. On 2026-11-06
-  all layouts were valid on the first try, over both transports. The
+  (v0.9.1) and 2026-11-14 (1.0) all layouts were valid on the first try,
+  over both transports. The
   validation errors themselves are not recorded.
 - Clicks never involve the LLM on the MCP Apps side or on A2UI over A2A, so
   their cost matches Scripted mode. Over AG-UI each click is a model turn
@@ -415,10 +436,55 @@ How to read them:
   host after the tool result, so it cannot be used as a render signal; the
   harness pings the view instead (excluded from the counts).
 
+## A2UI 1.0: what the upgrade changed
+
+*Added on 2026-11-14, when the A2UI side moved from v0.9.1 to the released
+1.0 spec. Details and every pin in [docs/VERSIONS.md](docs/VERSIONS.md).*
+
+On the wire, 1.0 renames bindings (`{"@path": ...}`, `{"@call": ...}`),
+drops the `v` from the version (`"1.0"`) and the theme from `createSurface`,
+and lets `createSurface` carry the components and the data model. The agent
+now sends a new surface as that one message; `A2UI_CREATE=split` keeps the
+pre-1.0 sequence (createSurface, updateComponents, updateDataModel), and
+`make measure` runs both on A2A:
+
+| Scenario | Network, one message | Network, three messages | UI payload, one / three | First render, one / three |
+|---|---|---|---|---|
+| S1 card | 3.1 KB | 3.4 KB | 1.8 / 1.9 KB | 4 / 3 ms |
+| S2 picker + click | 7.3 KB | 7.4 KB | 4.1 / 4.2 KB | 3 / 3 ms |
+| S3 chart + 2 clicks | 9.4 KB | 9.7 KB | 4.5 / 4.6 KB | 4 / 4 ms |
+| S4 clocks | 4.4 KB | 4.7 KB | 2.8 / 2.9 KB | 4 / 4 ms |
+| S5 composed chart | 9.0 KB | 9.0 KB | 1.0 / 1.0 KB | 5 / 3 ms |
+
+- **One message saves the envelopes, not the content**: about 0.1 KB of
+  A2UI and 0.3 KB on the wire per new surface (each A2UI message is its own
+  A2A DataPart). Clicks that redraw or update data were already partial
+  updates and are unchanged. S5 replays a recorded layout, the same in both
+  modes (one createSurface, as Gemini wrote it). Render time does not move:
+  over A2A the three messages always
+  arrived in one batch, rendered together.
+- **Headings became Markdown.** The 1.0 basic catalog's `Text` has only
+  `body` and `caption`; the `h1`-`h3` variants are gone, so the designed
+  surfaces write `## ${/place}` through `formatString`, and the model is
+  told to write headings as Markdown. The cards look the same.
+- **Bigger client and prompt.** The A2UI client bundle went from 788 to
+  952 KB raw (232 to 281 KB gzip) with `@a2ui/web_core` and `@a2ui/lit` 0.15,
+  and the system prompt with the 1.0 catalog schema from 28.6 K to 31.4 K
+  characters, paid on every Live LLM call: about 5% more input tokens per
+  scenario in the Live runs (17.7 K against 16.8 K for S1 over A2A).
+- **Upgrade friction.** On the Python side nothing had to be bumped: the
+  0.10 SDK already had the 1.0 builders and schemas, and the newer one
+  cannot be installed next to `ag_ui_adk`. On the client, `@a2ui/markdown-it`
+  (latest) still declares the previous `@a2ui/web_core` as a peer, so npm
+  installs two copies of web_core, and with two copies every container
+  renders an empty child, with no error in the console. Its ~20 lines are
+  inlined in the client until the peer range moves.
+
 ## Transport: A2UI over A2A vs over AG-UI
 
 *Added on 2026-11-06 with `ag_ui_adk` 0.12.0, `@ag-ui/client` 1.0.4 and
-`@ag-ui/a2ui-middleware` 0.0.14.*
+`@ag-ui/a2ui-middleware` 0.0.14; middleware 0.0.16 and Scripted numbers
+since 2026-11-14.*
 
 [AG-UI](https://docs.ag-ui.com/introduction) is often listed next to MCP Apps
 and A2UI, but it is a transport, not a UI format: a stream of typed events
@@ -438,15 +504,18 @@ changes**, following the AG-UI conventions rather than mirroring A2A (see
   `@ag-ui/a2ui-middleware` turns them into `a2ui-surface` activity events. A
   layout the model composes goes through a `compose_ui` tool, because the
   middleware does not read A2UI written in a text reply.
-- **A click is a turn of the model.** The middleware sends it as a synthetic
-  tool call; the model answers with the tool call that redraws the surface.
+- **A click is a turn of the model.** The middleware adds it to the history
+  as a hidden user message (`A2UI user action:` and the action JSON); the
+  model answers with the tool call that redraws the surface.
   Over A2A the executor handles clicks without the model.
 - The middleware needs Node, so there is one more hop: browser, Node relay
   (the role a CopilotKit runtime plays), agent.
 - AG-UI resends the whole conversation (messages, tool results, activities)
   with every run.
 
-**Compatibility finding.** With `ag_ui_adk` 0.12.0, clicks sent the AG-UI way
+**Compatibility finding** (fixed upstream in middleware 0.0.16, which sends
+the click as a user message: the shim is gone). With `ag_ui_adk` 0.12.0 and
+middleware 0.0.14, clicks sent the AG-UI way
 are dropped: the middleware's synthetic `log_a2ui_event` result does not
 match a tool call ADK has pending, so the run ends empty ("Skipping tool
 result batch ... no matching pending tool calls"). A 25-line shim in front of
@@ -460,11 +529,11 @@ so both transports run the same steps; from the table above):
 
 | Scenario | Network, A2A | Network, AG-UI | First render, A2A | First render, AG-UI |
 |---|---|---|---|---|
-| S1 card | 3.3 KB | 6.2 KB | 3 ms | 18 ms |
-| S2 picker + click | 7.3 KB | 17.7 KB | 3 ms | 18 ms |
-| S3 chart + 2 clicks | 9.7 KB | 34.1 KB | 3 ms | 22 ms |
-| S4 clocks | 4.6 KB | 8.9 KB | 4 ms | 19 ms |
-| S5 composed chart | 9.3 KB | 34.5 KB | 5 ms | 17 ms |
+| S1 card | 3.1 KB | 6.1 KB | 4 ms | 19 ms |
+| S2 picker + click | 7.3 KB | 17.8 KB | 3 ms | 19 ms |
+| S3 chart + 2 clicks | 9.4 KB | 33.6 KB | 4 ms | 22 ms |
+| S4 clocks | 4.4 KB | 8.9 KB | 4 ms | 20 ms |
+| S5 composed chart | 9.0 KB | 34.3 KB | 5 ms | 17 ms |
 
 - **UI payload is identical** (same A2UI messages reach the renderer), which
   checks that only the transport differs.
@@ -478,36 +547,38 @@ so both transports run the same steps; from the table above):
   and the ADK agent loop that now runs on every turn. Negligible next to an
   LLM call, visible next to A2A's few ms.
 - **Client code:** the AG-UI client add-on (connection plus `@ag-ui/client`)
-  is 333 KB raw, 76 KB gzip, on top of the A2UI client. On the agent side
-  the AG-UI endpoint (tool envelopes, click shim, replay model) is about 300
-  lines, the client connection 130, the relay 73.
+  is 385 KB raw, 86 KB gzip, on top of the A2UI client. On the agent side
+  the AG-UI endpoint (tool envelopes, run tracking, replay model) is about
+  260 lines (300 while it needed the click shim), the client connection 137,
+  the relay 73.
 
-**Live results** (Gemini, 3 runs after a warm-up, 2026-11-06; medians from
-the Live table above, both transports measured the same day):
+**Live results** (Gemini, 3 runs after a warm-up, 2026-11-14, A2UI 1.0;
+medians from the Live table above, both transports measured the same day):
 
 | Scenario | LLM calls, A2A | LLM calls, AG-UI | Input tokens, A2A | Input tokens, AG-UI | Network, A2A | Network, AG-UI |
 |---|---|---|---|---|---|---|
-| S1 card | 2 | 2 | 16.8 K | 18.0 K | 3.5 KB | 6.8 KB |
-| S2 picker + click | 2 | 4 | 16.8 K | 38.7 K | 7.4 KB | 20.3 KB |
-| S3 chart + 2 clicks | 2 | 6 | 17.0 K | 65.6 K | 9.5 KB | 38.4 KB |
-| S4 clocks | 2 | 2 | 16.9 K | 18.5 K | 4.6 KB | 9.8 KB |
-| S5 composed chart | 3 | 4 | 33.5 K | 53.9 K | 2.5 KB | 39.2 KB |
+| S1 card | 2 | 2 | 17.7 K | 18.8 K | 3.4 KB | 6.7 KB |
+| S2 picker + click | 2 | 4 | 17.7 K | 40.4 K | 7.4 KB | 20.4 KB |
+| S3 chart + 2 clicks | 2 | 6 | 17.9 K | 68.2 K | 9.3 KB | 37.7 KB |
+| S4 clocks | 2 | 2 | 17.8 K | 19.5 K | 4.5 KB | 10.0 KB |
+| S5 composed chart | 3 | 4 | 35.3 K | 54.3 K | 2.3 KB | 33.2 KB |
 
-- **Each click costs two model calls and about 21 to 24 K input tokens**
+- **Each click costs two model calls and about 22 to 25 K input tokens**
   (S2, S3), where A2A spends none. Gemini handled every click correctly: it
   passed the surface id, so the picker and the chart were redrawn in place
   (the UI payload is identical to A2A in every run). A click turn took 6.7 s
-  in a spot check; the harness does not time clicks.
-- **Turns without clicks cost about 7 to 10 % more input tokens** (S1, S4):
+  in a spot check on 2026-11-06; the harness does not time clicks.
+- **Turns without clicks cost about 7 to 9 % more input tokens** (S1, S4):
   the model reads the whole tool result, A2UI envelope included.
-- **S5 adds one call** (`compose_ui`, then a closing sentence) and about 20 K
-  input tokens; the network grows from 2.5 to 39 KB, because the forecast
+- **S5 adds one call** (`compose_ui`, then a closing sentence) and about 19 K
+  input tokens; the network grows from 2.3 to 33 KB, because the forecast
   data, the composed layout (as tool arguments and as the tool result) and
-  the history all cross the wire. The layout was painted after 38 s (32 to
-  39) against 47 s (36 to 51) over A2A: over AG-UI the surface shows as soon
+  the history all cross the wire. The layout was painted after 28 s (27 to
+  38) against 40 s (39 to 40) over A2A: over AG-UI the surface shows as soon
   as `compose_ui` returns, before the closing sentence, while over A2A it
-  arrives with the final reply. With 3 runs and this spread, read it as
-  "not slower", not as a measured gain.
+  arrives with the final reply. The same order showed on 2026-11-06 (38 s
+  against 47 s); with 3 runs each, read it as "earlier by the closing
+  sentence", not as a precise gain.
 - **First renders for S1 to S4 are within noise** of each other: the 15 ms
   of the Scripted table disappear behind the model calls.
 

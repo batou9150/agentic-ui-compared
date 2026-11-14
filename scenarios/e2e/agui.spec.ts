@@ -30,9 +30,7 @@ test("AG-UI S1 protocol: runs, activity snapshots, A2UI messages", async ({ page
         "agui:RUN_STARTED",
         "agui:TOOL_CALL_RESULT",
         "agui:ACTIVITY_SNAPSHOT",
-        "createSurface",
-        "updateComponents",
-        "updateDataModel",
+        "createSurface", // 1.0: components and data model inline
         "agui:CUSTOM",
         "agui:RUN_FINISHED",
       ]),

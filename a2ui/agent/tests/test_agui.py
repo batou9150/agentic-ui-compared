@@ -1,7 +1,7 @@
 """End to end over AG-UI (ag_ui_adk): Scripted replay, clicks as agent turns,
 compose_ui, and Live with a fake LLM. The middleware (Node) is not involved:
 these tests read the tool results it would turn into activity events, and send
-clicks the way it rewrites them (a synthetic log_a2ui_event pair)."""
+clicks the way it adds them to the history (a user message, as in 0.0.16)."""
 
 import contextlib
 import json
@@ -11,11 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from a2ui_agent.agui import (
-    action_call,
-    clicks_as_user_turns,
-    create_agui_app,
-)
+from a2ui_agent.agui import ACTION_PREFIX, action_call, create_agui_app
 from a2ui_agent.catalog import validate
 from starlette.testclient import TestClient
 from weather_core import WeatherService
@@ -65,35 +61,14 @@ class Thread:
         self, action: dict[str, Any], scripted: bool = True
     ) -> list[dict[str, Any]]:
         """What @ag-ui/a2ui-middleware does with forwardedProps.a2uiAction."""
-        call_id = f"a{self.n}"
-        text = (
-            f'User performed action "{action["name"]}" on surface "{action["surfaceId"]}"'
-            f" (component: {action.get('sourceComponentId', 'btn')})."
-            f" Context: {json.dumps(action.get('context', {}))}"
+        self.messages.append(
+            {
+                "id": f"a{self.n}",
+                "role": "user",
+                "name": f"a2ui_action_context_{'x' * 43}",
+                "content": click_text(action),
+            }
         )
-        self.messages += [
-            {
-                "id": f"aa{self.n}",
-                "role": "assistant",
-                "content": "",
-                "toolCalls": [
-                    {
-                        "id": call_id,
-                        "type": "function",
-                        "function": {
-                            "name": "log_a2ui_event",
-                            "arguments": json.dumps(action),
-                        },
-                    }
-                ],
-            },
-            {
-                "id": f"ar{self.n}",
-                "role": "tool",
-                "toolCallId": call_id,
-                "content": text,
-            },
-        ]
         return self.run(
             {
                 "a2uiAction": {"userAction": action},
@@ -115,6 +90,10 @@ class Thread:
             "/usage", params={"threadId": self.thread_id}
         ).json()
         return data
+
+
+def click_text(action: dict[str, Any]) -> str:
+    return f"{ACTION_PREFIX}\n{json.dumps(action)}"
 
 
 def results(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -159,7 +138,7 @@ def test_scripted_tool_returns_designed_surface_in_tool_result(thread: Thread) -
     )
     assert events[0]["type"] == "RUN_STARTED" and events[-1]["type"] == "RUN_FINISHED"
     ops = operations(events)
-    assert kinds(ops) == ["createSurface", "updateComponents", "updateDataModel"]
+    assert kinds(ops) == ["createSurface"]  # components and data model inline
     assert ops[0]["createSurface"]["surfaceId"] == "weather-1"
     assert_spec_valid(ops)
     validate(ops)
@@ -201,11 +180,7 @@ def test_scripted_forecast_controls_update_the_chart_in_place(thread: Thread) ->
         {"tool": "get_forecast", "args": {"city": "Lyon", "days": 7}},
     )
     assert operations(first)[0]["createSurface"]["surfaceId"] == "forecast-1"
-    data = next(
-        op["updateDataModel"]["value"]
-        for op in operations(first)
-        if "updateDataModel" in op
-    )
+    data = operations(first)[0]["createSurface"]["dataModel"]
     pid = int(data["placeId"])
     ctx = {"placeId": pid, "days": 16, "units": "metric"}
     events = thread.click(
@@ -228,7 +203,15 @@ def test_scripted_compose_goes_through_compose_ui(thread: Thread) -> None:
 
 def test_invalid_compose_is_a_tool_error_and_counts_a_retry(thread: Thread) -> None:
     bad = {
-        "messages": [{"version": "v0.9.1", "createSurface": {"surfaceId": "x"}}],
+        "messages": [
+            {
+                "version": "1.0",
+                "createSurface": {
+                    "surfaceId": "x",
+                    "components": [{"id": "root", "component": "Chart"}],
+                },
+            }
+        ],
         "text": "t",
     }
     events = thread.ask("Compose", {"compose": bad})
@@ -276,48 +259,9 @@ def test_live_click_reaches_the_model_as_a_user_turn(service: WeatherService) ->
         scripted=False,
     )
     said = " ".join(p.text or "" for p in llm.requests[2].contents[-1].parts or [])
-    assert said.startswith('[UI action] User performed action "pick_place"')
+    assert said.startswith(ACTION_PREFIX)
+    assert json.loads(said.removeprefix(ACTION_PREFIX))["name"] == "pick_place"
     assert texts(events) == "Done."
-
-
-def test_clicks_as_user_turns_rewrites_only_the_synthetic_pair() -> None:
-    msgs = [
-        {"id": "u", "role": "user", "content": "hi"},
-        {
-            "id": "a",
-            "role": "assistant",
-            "content": "",
-            "toolCalls": [
-                {
-                    "id": "c",
-                    "type": "function",
-                    "function": {"name": "log_a2ui_event", "arguments": "{}"},
-                }
-            ],
-        },
-        {
-            "id": "r",
-            "role": "tool",
-            "toolCallId": "c",
-            "content": "User performed action",
-        },
-        {
-            "id": "b",
-            "role": "assistant",
-            "content": "",
-            "toolCalls": [
-                {
-                    "id": "d",
-                    "type": "function",
-                    "function": {"name": "get_weather", "arguments": "{}"},
-                }
-            ],
-        },
-        {"id": "s", "role": "tool", "toolCallId": "d", "content": "{}"},
-    ]
-    out = clicks_as_user_turns(msgs)
-    assert [m["role"] for m in out] == ["user", "user", "assistant", "tool"]
-    assert out[1]["content"] == "[UI action] User performed action"
 
 
 @pytest.mark.parametrize(
@@ -339,9 +283,19 @@ def test_clicks_as_user_turns_rewrites_only_the_synthetic_pair() -> None:
 def test_action_call(
     name: str, ctx: dict[str, Any], expected: tuple[str, int | None]
 ) -> None:
-    text = f'User performed action "{name}" on surface "s-1" (component: b). Context: {json.dumps(ctx)}'
-    result = action_call(text)
+    action = {
+        "name": name,
+        "surfaceId": "s-1",
+        "sourceComponentId": "b",
+        "context": ctx,
+    }
+    result = action_call(click_text(action))
     assert result is not None
     tool, args = result
     assert (tool, args.get("days")) == expected
     assert args["surface_id"] == "s-1" and args["place_id"] == 1
+
+
+def test_action_call_ignores_other_messages() -> None:
+    assert action_call("Weather in Paris") is None
+    assert action_call(f"{ACTION_PREFIX}\nnot json") is None

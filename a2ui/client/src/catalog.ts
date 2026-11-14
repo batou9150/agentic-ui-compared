@@ -1,7 +1,8 @@
 // The weather catalog: the A2UI basic catalog plus two custom components,
 // Chart and Clock. Same catalogId and props as a2ui/agent/src/a2ui_agent/catalog.py.
-import { A2uiLitElement } from "@a2ui/lit/v0_9";
-import { Catalog, CommonSchemas, basicCatalog } from "@a2ui/web_core/v0_9";
+import { A2uiLitElement } from "@a2ui/lit";
+import { basicCatalog } from "@a2ui/web_core/catalogs/basic/v1";
+import { Catalog, CommonSchemas } from "@a2ui/web_core/v1_0";
 import {
   BarController,
   BarElement,
@@ -183,12 +184,11 @@ export class WeatherClockElement extends A2uiLitElement<typeof ClockApi> {
 
 export const weatherCatalog = new Catalog(
   WEATHER_CATALOG_ID,
-  "v0.9",
+  "1.0",
   [
     ...basicCatalog.components.values(),
-    { ...ChartApi, tagName: "weather-chart" },
-    { ...ClockApi, tagName: "weather-clock" },
+    { ...ChartApi, tagName: "weather-chart", element: WeatherChartElement },
+    { ...ClockApi, tagName: "weather-clock", element: WeatherClockElement },
   ],
   [...basicCatalog.functions.values()],
-  basicCatalog.themeSchema,
 );

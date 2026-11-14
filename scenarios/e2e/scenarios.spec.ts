@@ -35,9 +35,11 @@ test("S1 protocol: ui:// view vs A2UI messages", async ({ page }) => {
     );
   await expect
     .poll(() => logKinds(page, "a2ui"))
-    .toEqual(
-      expect.arrayContaining(["message/stream", "createSurface", "updateComponents", "updateDataModel"]),
-    );
+    .toEqual(expect.arrayContaining(["message/stream", "createSurface"]));
+  // A2UI 1.0: the layout and the data model come inline in the createSurface.
+  const a2ui = await logKinds(page, "a2ui");
+  expect(a2ui).not.toContain("updateComponents");
+  expect(a2ui).not.toContain("updateDataModel");
 });
 
 test("S2 click reaches the server / the agent", async ({ page }) => {

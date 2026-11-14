@@ -11,12 +11,17 @@ const MODE = process.env.MEASURE_MODE === "live" ? "live" : "scripted";
 const OUT = process.env.MEASURE_OUT ?? join(import.meta.dirname, "../../measurements/raw");
 // agui: a second pass with the A2UI pane alone, over AG-UI (MCP Apps is unchanged).
 const AGUI = process.env.MEASURE_A2UI_TRANSPORT === "agui";
-const sides: Side[] = AGUI ? ["a2ui"] : SIDES;
+// split: a third pass with the A2UI pane alone, over A2A, its agent sending a new
+// surface as three messages (A2UI_CREATE=split, passed on to the backends).
+const SPLIT = process.env.A2UI_CREATE === "split";
+const sides: Side[] = AGUI || SPLIT ? ["a2ui"] : SIDES;
+const SUFFIX = AGUI ? "-agui" : SPLIT ? "-split" : "";
 
 test.setTimeout(30 * 60_000);
 
-test(`measure ${MODE}${AGUI ? " over AG-UI" : ""}, ${RUNS} runs per scenario`, async ({ page }) => {
-  await openHarness(page, `mode=${MODE}${AGUI ? "&side=a2ui&a2ui=agui" : ""}`, { fakeClock: false });
+test(`measure ${MODE}${SUFFIX}, ${RUNS} runs per scenario`, async ({ page }) => {
+  const query = AGUI ? "&side=a2ui&a2ui=agui" : SPLIT ? "&side=a2ui" : "";
+  await openHarness(page, `mode=${MODE}${query}`, { fakeClock: false });
   for (const scenario of SCENARIOS) {
     await page.getByTestId("scenario-select").selectOption(scenario.id);
     // One warm-up run (JIT, caches, connections), then the measured runs.
@@ -46,6 +51,6 @@ test(`measure ${MODE}${AGUI ? " over AG-UI" : ""}, ${RUNS} runs per scenario`, a
   await page.getByTestId("export-json").click();
   const rows = JSON.parse(readFileSync(await (await download).path(), "utf8"));
   mkdirSync(OUT, { recursive: true });
-  writeFileSync(join(OUT, `runs-${MODE}${AGUI ? "-agui" : ""}.json`), JSON.stringify(rows, null, 2) + "\n");
+  writeFileSync(join(OUT, `runs-${MODE}${SUFFIX}.json`), JSON.stringify(rows, null, 2) + "\n");
   expect(rows).toHaveLength(SCENARIOS.length * (RUNS + 1) * sides.length);
 });

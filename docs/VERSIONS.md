@@ -1,7 +1,7 @@
 # Versions
 
 Snapshot taken on **2026-10-04**; A2UI agent dependencies bumped on
-**2026-11-06**. Every version below is pinned exactly in the
+**2026-11-06**; A2UI moved to the released **1.0** spec on **2026-11-14**. Every version below is pinned exactly in the
 lockfiles (`uv.lock`, `package-lock.json`). Bumping any of them means
 re-running `make test` and `make measure`, then updating this file and the
 dated header of `COMPARISON.md`.
@@ -12,9 +12,9 @@ dated header of `COMPARISON.md`.
 |---|---|---|---|
 | MCP Apps (SEP-1865, extension `io.modelcontextprotocol/ui`) | `2026-01-26` | Stable | `specification/2026-01-26/apps.mdx` in modelcontextprotocol/ext-apps @ `82221c0` (tag v2.0.3, 2026-09-25) |
 | MCP Apps draft | not used | Draft | `specification/draft/apps.mdx` (adds view-registered tools, sampling, `ui/download-file`) |
-| A2UI | `v0.9.1` | Released ("closed") | `specification/v0_9_1/` in a2ui-project/a2ui @ `1444719` (2026-10-02) |
-| A2UI v1.0 | not used | Candidate for stable | `specification/v1_0/` (renames messages to `agent_to_renderer` / `renderer_to_agent`) |
-| A2UI over A2A extension | `https://a2ui.org/a2a-extension/a2ui/v0.9.1` | Released | `application/a2ui+json` DataParts |
+| A2UI | `1.0` | Released | [a2ui.org/specification/v1.0-a2ui](https://a2ui.org/specification/v1.0-a2ui/); schemas as shipped by a2ui-core 0.5.0 and @a2ui/web_core 0.15.0 |
+| A2UI v0.9.1 | used until 2026-11-14 | Released ("closed") | `specification/v0_9_1/` in a2ui-project/a2ui @ `1444719` (2026-10-02) |
+| A2UI over A2A extension | `https://a2ui.org/a2a-extension/a2ui/v1.0` | Released | `application/a2ui+json` DataParts |
 
 ## Python (Python 3.14, managed with uv)
 
@@ -24,8 +24,8 @@ dated header of `COMPARISON.md`.
 | pydantic | 2.13.5 | core |
 | mcp | 2.3.0 | mcp-apps server (`MCPServer` + `mcp.server.apps.Apps`) |
 | google-adk | 2.13.0 | a2ui agent |
-| a2ui-agent-sdk | 0.10.0 (import `a2ui`) | a2ui agent |
-| a2ui-core | 0.5.0 | a2ui agent (transitive, pinned) |
+| a2ui-agent-sdk | 0.10.0 (import `a2ui`) | a2ui agent (0.11.0 is out; `ag_ui_adk` caps it below 0.11) |
+| a2ui-core | 0.5.0 | a2ui agent (transitive, pinned; has the 1.0 schemas and builders) |
 | a2ui-a2a | 0.2.0 (import `a2ui.a2a`) | a2ui agent (A2A extension helpers, split out of a2ui-agent-sdk) |
 | ag-ui-adk | 0.12.0 | a2ui agent, AG-UI endpoint (`/agui`) |
 | ag-ui-protocol | 1.0.0 | a2ui agent, AG-UI events (import `ag_ui`) |
@@ -47,12 +47,13 @@ dated header of `COMPARISON.md`.
 |---|---|---|
 | @modelcontextprotocol/ext-apps | 2.0.3 | mcp-apps views (App SDK), compare host (`/app-bridge`) |
 | @modelcontextprotocol/client | 2.3.0 | compare host (peer of ext-apps 2.x) |
-| zod | 4.6.5 (mcp-apps views) / 3.25.76 (a2ui client) | ext-apps 2.x needs zod 4, `@a2ui/*` 0.12 is built on zod 3 |
-| @a2ui/web_core | 0.12.0 | a2ui client, compare right pane |
-| @a2ui/lit | 0.12.0 | a2ui client, compare right pane |
-| @a2ui/markdown-it | 0.2.0 | Markdown in A2UI `Text` (peer of @a2ui/lit) |
+| zod | 4.6.5 (mcp-apps views) / 3.25.76 (a2ui client) | ext-apps 2.x needs zod 4, `@a2ui/*` 0.15 is built on zod 3 |
+| @a2ui/web_core | 0.15.0 | a2ui client, compare right pane (A2UI 1.0: `@a2ui/web_core/v1_0`, `/catalogs/basic/v1`) |
+| @a2ui/lit | 0.15.0 | a2ui client, compare right pane |
+| markdown-it | 14.3.3 | Markdown in A2UI `Text` (in place of @a2ui/markdown-it, see 13 below) |
+| dompurify | 3.4.17 | sanitizes that Markdown |
 | @ag-ui/client | 1.0.4 | a2ui client (AG-UI connection), compare relay |
-| @ag-ui/a2ui-middleware | 0.0.14 | compare relay (needs Node: imports `crypto`) |
+| @ag-ui/a2ui-middleware | 0.0.16 | compare relay (needs Node: imports `crypto`) |
 | @ag-ui/encoder | 1.0.4 | compare relay (SSE encoding) |
 | rxjs | 7.8.1 | compare relay (peer of @ag-ui/client and the middleware) |
 | @a2a-js/sdk | 0.3.14 | a2ui client (0.3 line, matches a2a-sdk 0.3 on the server) |
@@ -81,10 +82,10 @@ None of these break the plan; they change how it is implemented.
 
 1. **A2UI repository moved**: `github.com/google/A2UI` now redirects to
    `github.com/a2ui-project/a2ui`.
-2. **A2UI spec version**: v0.9.1 is the current released version; v1.0 is
-   only a candidate and the Google codelab "Frontend Experiences with ADK and
-   A2UI" still uses v0.8 (rendered in the ADK dev UI). This repo targets
-   v0.9.1 and does not reuse the codelab's message format.
+2. **A2UI spec version**: the repo targeted v0.9.1 until 1.0 was released,
+   then moved to 1.0 on 2026-11-14 (see 13). The Google codelab "Frontend
+   Experiences with ADK and A2UI" still uses v0.8 (rendered in the ADK dev
+   UI); this repo does not reuse the codelab's message format.
 3. **No chart or clock in the A2UI basic catalog** (18 components, none of
    them a chart or a timer). S3 and S4 need a small custom catalog
    (`Chart`, `Clock`) registered in the Lit renderer, with its own catalog
@@ -132,4 +133,48 @@ None of these break the plan; they change how it is implemented.
     pending tool calls" and ends the run with no output. `a2ui_agent/agui.py`
     rewrites the pair as a user message with the same text
     (`AguiRequestShim`). The middleware also ignores A2UI written in text
-    replies (it reads tool results), hence the `compose_ui` tool.
+    replies (it reads tool results), hence the `compose_ui` tool. Fixed
+    upstream in 0.0.16 (see 13): the shim is gone.
+13. **A2UI 1.0** (2026-11-14). What changed in this repo:
+    - Messages carry `"version": "1.0"` (no `v`), bindings are
+      `{"@path": ...}` and function calls `{"@call": ...}`; component
+      envelope keys (`id`, `accessibility`, `catalogId`) keep their names in
+      the schemas the SDKs ship. Catalog component schemas are flat, and a
+      catalog declares `protocolVersion: "1.0"`. Themes are gone from
+      `createSurface`; `catalogId` there is optional.
+    - The 1.0 basic catalog's `Text` only has `body` and `caption`: the
+      `h1`-`h3` variants are gone, so headings are Markdown (`## ${/place}`
+      through `formatString` for a bound value).
+    - `createSurface` can carry the components and the data model, so a new
+      surface is one message instead of three. The agent does that by
+      default; `A2UI_CREATE=split` keeps the three-message form, and
+      `make measure` runs a third pass with it to compare.
+    - Python: no bump needed. a2ui-agent-sdk 0.10 / a2ui-core 0.5 already
+      have the 1.0 builders (`a2ui.builder.v1_0`), schemas and validator, and
+      0.11 / 0.6 cannot be used: `ag_ui_adk` (0.12 and 0.13) requires
+      `a2ui-agent-sdk<0.11` and `a2ui-core<0.6`. `a2ui-a2a` 0.3 requires
+      `a2ui-agent-sdk>0.10`, so it stays at 0.2.
+    - @a2ui/web_core and @a2ui/lit 0.12 -> 0.15 (the first line whose 1.0
+      wire version is `"1.0"`). Lit 0.15 renders nothing until a surface's
+      root arrives; here the root always comes in the same message or batch
+      as the surface, so no loading state was added.
+    - **@a2ui/markdown-it 0.2.2 (latest) still declares `@a2ui/web_core
+      ^0.14` as a peer.** npm then installs a 0.14 copy at the top and
+      duplicates 0.15 under the client and under lit, and npm `overrides`
+      cannot change a peer range (every attempt ends in ERESOLVE). Two copies
+      of web_core break rendering silently: a node built by lit's copy is not
+      a node for the catalog's copy, so every container renders an empty
+      child. The package only imports types from web_core, so its ~20 lines
+      (markdown-it, then DOMPurify) are inlined in
+      `a2ui/client/src/markdown.ts`.
+    - `@ag-ui/a2ui-middleware` 0.0.16 sends a click as a hidden user
+      message, `A2UI user action:` followed by the action JSON, instead of
+      the synthetic `log_a2ui_event` pair; `ag_ui_adk` passes it to the model
+      as is, so the request shim no longer rewrites anything (it still opens
+      the per-run usage record).
+    - S5 was re-recorded in a Live run with the 1.0 prompt: Gemini composed
+      one createSurface with its components inline and a Markdown heading,
+      valid on the first try. `record_s5.py --rebind` now also reads series
+      labelled "Paris Max" (the model dropped the parentheses this time).
+    - Live measurements skip the split pass (`A2UI_CREATE=split`): it only
+      changes bytes, which Scripted mode measures exactly.

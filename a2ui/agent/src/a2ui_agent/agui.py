@@ -5,10 +5,9 @@
   turns into `a2ui-surface` activity events.
 - A layout the model composes (S5) goes through the compose_ui tool, in the
   same envelope: the middleware does not read A2UI written in text replies.
-- A click is a turn of the agent: the middleware sends it as a synthetic
-  `log_a2ui_event` tool call and result, and the model answers it with a tool
-  call. ag_ui_adk 0.12 drops that pair (it is never a pending ADK call), so
-  `AguiRequestShim` rewrites it as a user message with the same text.
+- A click is a turn of the agent: the middleware adds it to the history as a
+  user message, "A2UI user action:" followed by the action as JSON (hidden from
+  the events it streams back), and the model answers it with a tool call.
 
 Scripted mode (`forwardedProps.scripted`) swaps Gemini for a replay model that
 makes the tool call the scenario specifies, so a run goes through the same
@@ -17,7 +16,6 @@ agent loop, events and middleware with no LLM.
 
 import inspect
 import json
-import re
 from collections.abc import AsyncGenerator, Callable
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field
@@ -42,13 +40,7 @@ from .tools import UI_SINK, Tool, UiRequest, make_tools
 
 APP_NAME = "weather_a2ui_agui"
 USER_ID = "user"
-ACTION_TOOL = "log_a2ui_event"  # the middleware's synthetic tool for a click
-ACTION_PREFIX = "[UI action] "
-ACTION_TEXT = re.compile(
-    r'User performed action "(?P<name>[^"]*)" on surface "(?P<surface>[^"]*)"'
-    r".*?Context: (?P<context>\{.*\})",
-    re.DOTALL,
-)
+ACTION_PREFIX = "A2UI user action:"  # how the middleware words a click
 
 
 @dataclass
@@ -72,45 +64,11 @@ RUN: ContextVar[Run | None] = ContextVar("AGUI_RUN", default=None)
 # ---- the request shim -------------------------------------------------------
 
 
-def clicks_as_user_turns(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Replace the middleware's synthetic click pair by a user message."""
-    ids = {
-        call.get("id")
-        for m in messages
-        if m.get("role") == "assistant"
-        for call in m.get("toolCalls") or []
-        if (call.get("function") or {}).get("name") == ACTION_TOOL
-    }
-    if not ids:
-        return messages
-    out: list[dict[str, Any]] = []
-    for m in messages:
-        calls = m.get("toolCalls") or []
-        if (
-            m.get("role") == "assistant"
-            and calls
-            and all(c.get("id") in ids for c in calls)
-        ):
-            continue
-        if m.get("role") == "tool" and m.get("toolCallId") in ids:
-            out.append(
-                {
-                    "id": m["id"],
-                    "role": "user",
-                    "content": ACTION_PREFIX + str(m["content"]),
-                }
-            )
-            continue
-        out.append(m)
-    return out
-
-
 class AguiRequestShim:
     """ASGI middleware in front of the ag_ui_adk endpoint.
 
-    Rewrites clicks (see clicks_as_user_turns) and opens a `Run` for the
-    request: its thread, its Scripted step if any, and its LLM usage, which
-    the relay reads from GET /usage when the run ends.
+    Opens a `Run` for the request: its thread, its Scripted step if any, and
+    its LLM usage, which the relay reads from GET /usage when the run ends.
     """
 
     def __init__(self, app: ASGIApp, runs: dict[str, Run]) -> None:
@@ -132,19 +90,10 @@ class AguiRequestShim:
             data = None
         token = None
         if isinstance(data, dict):
-            data["messages"] = clicks_as_user_turns(data.get("messages") or [])
             props = data.get("forwardedProps") or {}
             run = Run(str(data.get("threadId", "")), props.get("scripted"))
             self.runs[run.thread_id] = run
             token = RUN.set(run)
-            body = json.dumps(data).encode()
-            scope = {
-                **scope,
-                "headers": [
-                    (k, v) for k, v in scope["headers"] if k != b"content-length"
-                ]
-                + [(b"content-length", str(len(body)).encode())],
-            }
         sent = False
 
         async def replay() -> Message:
@@ -215,8 +164,8 @@ async def compose_ui(a2ui_json: str) -> dict[str, Any]:
     """Show a layout you composed for a request no tool's UI covers.
 
     Args:
-        a2ui_json: JSON array of A2UI v0.9.1 messages (createSurface, then
-            updateComponents and optionally updateDataModel) for ONE new surface.
+        a2ui_json: JSON array of A2UI 1.0 messages for ONE new surface: a
+            createSurface carrying its components and, if bound, its dataModel.
     """
     try:
         parts = a2ui_parser().parse_response(
@@ -270,16 +219,20 @@ def _call(name: str, args: dict[str, Any]) -> LlmResponse:
 
 def action_call(text: str) -> tuple[str, dict[str, Any]] | None:
     """The tool call a click asks for, as the role's UI action rule describes it."""
-    match = ACTION_TEXT.search(text)
-    if match is None:
+    _, prefix, payload = text.partition(ACTION_PREFIX)
+    if not prefix:
         return None
-    ctx = json.loads(match["context"])
+    try:
+        action = json.loads(payload)
+    except ValueError:
+        return None
+    ctx = action.get("context") or {}
     args: dict[str, Any] = {
         "place_id": int(ctx["placeId"]),
         "units": ctx.get("units", "metric"),
-        "surface_id": match["surface"],
+        "surface_id": action["surfaceId"],
     }
-    if match["name"] == "set_forecast" or ctx.get("then") == "forecast":
+    if action.get("name") == "set_forecast" or ctx.get("then") == "forecast":
         return "get_forecast", {**args, "days": int(ctx.get("days", 7))}
     return "get_weather", args
 
@@ -367,4 +320,4 @@ def create_agui_app(
     return AguiRequestShim(app, runs)
 
 
-__all__ = ["action_call", "clicks_as_user_turns", "create_agui_app", "replay"]
+__all__ = ["action_call", "create_agui_app", "replay"]

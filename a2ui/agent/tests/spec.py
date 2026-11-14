@@ -1,8 +1,10 @@
-"""Validate A2UI messages against the official v0.9.1 JSON schemas.
+"""Validate A2UI messages against the official 1.0 JSON schemas.
 
-The protocol schemas come from a2ui-agent-sdk (`a2ui.utils.schemas`). Their
-$ids say v0_9, and server_to_client.json references `catalog.json`, which is
-mapped to our weather catalog (a superset of the basic catalog).
+The protocol schemas come from a2ui-agent-sdk (`a2ui.utils.schemas`).
+agent_to_renderer.json references `catalog.json`, which is mapped to our
+weather catalog (a superset of the basic catalog). The catalog's own
+`common_types.json` references resolve against its $id, so the common types
+are registered there too.
 """
 
 import json
@@ -10,27 +12,27 @@ from functools import cache
 from typing import Any
 
 from a2ui.utils.schemas import load_agent_to_renderer_schema, load_common_types_schema
-from a2ui_agent.catalog import A2UI_VERSION, weather_catalog_schema
+from a2ui_agent.catalog import A2UI_VERSION, WEATHER_CATALOG_ID, weather_catalog_schema
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
-BASE = "https://a2ui.org/specification/v0_9/"
+BASE = "https://a2ui.org/specification/v1_0/"
+CATALOG_BASE = WEATHER_CATALOG_ID.rsplit("/", 1)[0] + "/"
 
 
 @cache
 def message_validator() -> Draft202012Validator:
-    s2c = load_agent_to_renderer_schema(A2UI_VERSION)
+    a2r = load_agent_to_renderer_schema(A2UI_VERSION)
+    common = Resource.from_contents(load_common_types_schema(A2UI_VERSION))
     registry = Registry().with_resources(
         [
-            (BASE + "server_to_client.json", Resource.from_contents(s2c)),
-            (
-                BASE + "common_types.json",
-                Resource.from_contents(load_common_types_schema(A2UI_VERSION)),
-            ),
+            (BASE + "agent_to_renderer.json", Resource.from_contents(a2r)),
+            (BASE + "common_types.json", common),
+            (CATALOG_BASE + "common_types.json", common),
             (BASE + "catalog.json", Resource.from_contents(weather_catalog_schema())),
         ]
     )
-    return Draft202012Validator(s2c, registry=registry)
+    return Draft202012Validator(a2r, registry=registry)
 
 
 def assert_spec_valid(messages: list[dict[str, Any]]) -> None:

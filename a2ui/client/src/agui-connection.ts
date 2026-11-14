@@ -6,9 +6,9 @@
 // and a click is sent the AG-UI way, as forwardedProps.a2uiAction, which the
 // agent answers as a turn of its model.
 import { EventType, HttpAgent, type BaseEvent } from "@ag-ui/client";
-import { MessageProcessor, type ActionPayload } from "@a2ui/web_core/v0_9";
+import { MessageProcessor, type ActionPayload } from "@a2ui/web_core/v1_0";
 import { weatherCatalog } from "./catalog";
-import type { AgentConnection, ConnectionHooks, TurnResult } from "./connection";
+import { MESSAGE_VERSION, type AgentConnection, type ConnectionHooks, type TurnResult } from "./connection";
 
 const encoder = new TextEncoder();
 const byteLength = (value: unknown) =>
@@ -88,7 +88,7 @@ export class AguiAgentConnection implements AgentConnection {
     this.agent = this.newAgent();
     this.seen.clear();
     for (const id of [...this.processor.getSurfaces().keys()]) {
-      this.processor.processMessages([{ version: "v0.9", deleteSurface: { surfaceId: id } }]);
+      this.processor.processMessages([{ version: MESSAGE_VERSION, deleteSurface: { surfaceId: id } }]);
     }
   }
 

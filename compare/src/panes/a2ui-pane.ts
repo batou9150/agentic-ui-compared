@@ -16,7 +16,8 @@ const RECORDED = import.meta.glob("../../../scenarios/recorded/*.json", {
 }) as Record<string, unknown>;
 
 const A2UI_KINDS = new Set(["createSurface", "updateComponents", "updateDataModel", "deleteSurface"]);
-const DATA_KINDS = new Set(["updateComponents", "updateDataModel"]);
+// Messages that bring layout or data: a 1.0 createSurface can carry both inline.
+const DATA_KINDS = new Set(["createSurface", "updateComponents", "updateDataModel"]);
 const RUN_KINDS = new Set(["message/stream", "run"]); // an A2A stream or an AG-UI run
 
 @customElement("a2ui-pane")
